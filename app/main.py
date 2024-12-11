@@ -20,32 +20,32 @@ def main():
     if file_contents:
         for char in file_contents:
             scanner(char)
-        sys.stdout.write("EOF  null\n")
+        print("EOF  null")
     else:
         print("EOF  null") # Placeholder, remove this line when implementing the scanner
 
 def scanner(char):
     match char:
         case "(":
-            sys.stdout.write("LEFT_PAREN ( null\n")
+            print("LEFT_PAREN ( null")
         case ")":
-            sys.stdout.write("RIGHT_PAREN ) null\n")
+            print("RIGHT_PAREN ) null")
         case "{":
-            sys.stdout.write("LEFT_BRACE { null\n")
+            print("LEFT_BRACE { null")
         case "}":
-            sys.stdout.write("RIGHT_BRACE } null\n")
+            print("RIGHT_BRACE } null")
         case "*":
-            sys.stdout.write("STAR * null\n")
+            print("STAR * null")
         case ".":
-            sys.stdout.write("DOT . null\n")
+            print("DOT . null")
         case ",":
-            sys.stdout.write("COMMA , null\n")
+            print("COMMA , null")
         case "+":
-            sys.stdout.write("PLUS + null\n")
+            print("PLUS + null")
         case "-":
-            sys.stdout.write("MINUS - null\n")
+            print("MINUS - null")
         case ";":
-            sys.stdout.write("SEMICOLON ; null\n")
+            print("SEMICOLON ; null")
 
 
 if __name__ == "__main__":
