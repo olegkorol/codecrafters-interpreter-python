@@ -34,6 +34,18 @@ def scanner(char):
             sys.stdout.write("LEFT_BRACE { null\n")
         case "}":
             sys.stdout.write("RIGHT_BRACE } null\n")
+        case "*":
+            sys.stdout.write("STAR * null\n")
+        case ".":
+            sys.stdout.write("DOT . null\n")
+        case ",":
+            sys.stdout.write("COMMA , null\n")
+        case "+":
+            sys.stdout.write("PLUS + null\n")
+        case "-":
+            sys.stdout.write("MINUS - null\n")
+        case ";":
+            sys.stdout.write("SEMICOLON ; null\n")
 
 
 if __name__ == "__main__":
