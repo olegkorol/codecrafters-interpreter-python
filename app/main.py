@@ -2,8 +2,6 @@ import sys
 
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!", file=sys.stderr)
 
     if len(sys.argv) < 3:
         print("Usage: ./your_program.sh tokenize <filename>", file=sys.stderr)
@@ -21,9 +19,19 @@ def main():
 
     # Uncomment this block to pass the first stage
     if file_contents:
-        raise NotImplementedError("Scanner not implemented")
+        for char in file_contents:
+            if char in ["(", ")"]:
+                scan_paranthesis(char)
+        sys.stdout.write("EOF  null\n")
     else:
         print("EOF  null") # Placeholder, remove this line when implementing the scanner
+
+def scan_paranthesis(char):
+    match char:
+        case "(":
+            sys.stdout.write("LEFT_PAREN ( null\n")
+        case ")":
+            sys.stdout.write("RIGHT_PAREN ) null\n")
 
 
 if __name__ == "__main__":
