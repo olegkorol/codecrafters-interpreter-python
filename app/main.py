@@ -18,9 +18,17 @@ def main():
         file_contents = file.read()
 
     if file_contents:
+        scan_errors = False
         for char in file_contents:
-            scanner(char)
+            success = scanner(char)
+            if not success:
+                scan_errors = True
         print("EOF  null")
+
+        if scan_errors:
+            exit(65)
+        else:
+            exit(0)
     else:
         print("EOF  null") # Placeholder, remove this line when implementing the scanner
 
@@ -46,6 +54,11 @@ def scanner(char):
             print("MINUS - null")
         case ";":
             print("SEMICOLON ; null")
+        case _:
+            print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
+            return False
+
+    return True
 
 
 if __name__ == "__main__":
