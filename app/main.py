@@ -1,7 +1,9 @@
 import sys
 
+scan_errors = False
 
 def main():
+    global scan_errors
 
     if len(sys.argv) < 3:
         print("Usage: ./your_program.sh tokenize <filename>", file=sys.stderr)
@@ -18,9 +20,10 @@ def main():
         file_contents = file.read()
 
     if file_contents:
-        scan_errors = False
         file_contents_length = len(file_contents)
         index_to_ignore = None # Used to store indexes that are part of multiple-character lexemes
+        current_line = 1
+        ignore_rest_of_line = None
 
         for i in range(file_contents_length):
             if i == index_to_ignore:
@@ -29,27 +32,34 @@ def main():
             char = file_contents[i]
             next_char = file_contents[i + 1] if i < file_contents_length - 1 else None
 
+            if char == "\n":
+                current_line += 1
+                continue
+
+            # This is set in action when we find a comment. The rest of the line is ignored
+            if current_line == ignore_rest_of_line:
+                continue
+
             # Handles multiple-character lexemes
             if char == "=" and next_char == "=":
-                success = scanner("==")
+                scanner("==", current_line)
                 index_to_ignore = i + 1
             elif char == "!" and next_char == "=":
-                success = scanner("!=")
+                scanner("!=", current_line)
                 index_to_ignore = i + 1
             elif char in ["<", ">"] and next_char == "=":
-                success = scanner(char + "=")
+                scanner(char + "=", current_line)
                 index_to_ignore = i + 1
             elif char == "/" and next_char == "/": # Comments `//` - Stop here
-                print("EOF  null")
-                return
-            elif char in ["\n", "\t", " "]: # Ignore these
+                ignore_rest_of_line = current_line
                 continue
+            elif char in ["\t", " "]: # Ignore these
+                continue
+
             # Handles single-character lexemes
             else:
-                success = scanner(char)
-            # Handles errors
-            if not success:
-                scan_errors = True
+                scanner(char, current_line)
+
         print("EOF  null")
 
         if scan_errors:
@@ -59,7 +69,9 @@ def main():
     else:
         print("EOF  null") # Placeholder, remove this line when implementing the scanner
 
-def scanner(char):
+def scanner(char, current_line):
+    global scan_errors
+
     match char:
         case "(":
             print("LEFT_PAREN ( null")
@@ -100,7 +112,8 @@ def scanner(char):
         case "/":
             print("SLASH / null")
         case _:
-            print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
+            print(f"[line {current_line}] Error: Unexpected character: {char}", file=sys.stderr)
+            scan_errors = True
             return False
 
     return True
