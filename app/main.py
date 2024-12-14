@@ -19,8 +19,24 @@ def main():
 
     if file_contents:
         scan_errors = False
-        for char in file_contents:
-            success = scanner(char)
+        file_contents_length = len(file_contents)
+        index_to_ignore = None
+
+        for i in range(file_contents_length):
+            if i == index_to_ignore:
+                continue
+
+            char = file_contents[i]
+            next_char = file_contents[i + 1] if i < file_contents_length - 1 else None
+            
+            # Handles multiple-character lexemes
+            if char == "=" and next_char == "=":
+                success = scanner("==")
+                index_to_ignore = i + 1
+            # Handles single-character lexemes
+            else:
+                success = scanner(char)
+            # Handles errors
             if not success:
                 scan_errors = True
         print("EOF  null")
@@ -54,6 +70,10 @@ def scanner(char):
             print("MINUS - null")
         case ";":
             print("SEMICOLON ; null")
+        case "=":
+            print("EQUAL = null")
+        case "==":
+            print("EQUAL_EQUAL == null")
         case _:
             print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
             return False
