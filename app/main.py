@@ -40,6 +40,9 @@ def main():
             elif char in ["<", ">"] and next_char == "=":
                 success = scanner(char + "=")
                 index_to_ignore = i + 1
+            elif char == "/" and next_char == "/": # Comments `//` - Stop here
+                print("EOF  null")
+                return
             # Handles single-character lexemes
             else:
                 success = scanner(char)
@@ -93,6 +96,8 @@ def scanner(char):
             print("GREATER > null")
         case ">=":
             print("GREATER_EQUAL >= null")
+        case "/":
+            print("SLASH / null")
         case _:
             print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
             return False
