@@ -23,7 +23,7 @@ def main():
         index_to_ignore = None # Used to store indexes that are part of multiple-character lexemes
 
         for i in range(file_contents_length):
-            if i == index_to_ignore:
+            if i in index_to_ignore:
                 continue
 
             char = file_contents[i]
@@ -43,6 +43,8 @@ def main():
             elif char == "/" and next_char == "/": # Comments `//` - Stop here
                 print("EOF  null")
                 return
+            elif char == "<" and next_char == "|":
+                print("x")
             # Handles single-character lexemes
             else:
                 success = scanner(char)
