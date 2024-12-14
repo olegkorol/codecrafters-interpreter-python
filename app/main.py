@@ -20,7 +20,7 @@ def main():
     if file_contents:
         scan_errors = False
         file_contents_length = len(file_contents)
-        index_to_ignore = None
+        index_to_ignore = None # Used to store indexes that are part of multiple-character lexemes
 
         for i in range(file_contents_length):
             if i == index_to_ignore:
@@ -28,10 +28,14 @@ def main():
 
             char = file_contents[i]
             next_char = file_contents[i + 1] if i < file_contents_length - 1 else None
+
             
             # Handles multiple-character lexemes
             if char == "=" and next_char == "=":
                 success = scanner("==")
+                index_to_ignore = i + 1
+            elif char == "!" and next_char == "=":
+                success = scanner("!=")
                 index_to_ignore = i + 1
             # Handles single-character lexemes
             else:
@@ -74,6 +78,10 @@ def scanner(char):
             print("EQUAL = null")
         case "==":
             print("EQUAL_EQUAL == null")
+        case "!":
+            print("BANG ! null")
+        case "!=":
+            print("BANG_EQUAL != null")
         case _:
             print(f"[line 1] Error: Unexpected character: {char}", file=sys.stderr)
             return False
