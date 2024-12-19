@@ -24,6 +24,8 @@ def main():
         index_to_ignore = None # Used to store indexes that are part of multiple-character lexemes
         current_line = 1
         ignore_rest_of_line = None
+        is_string_literal_open = False
+        string_literal = ""
 
         for i in range(file_contents_length):
             if i == index_to_ignore:
@@ -40,7 +42,21 @@ def main():
             if current_line == ignore_rest_of_line:
                 continue
 
-            # Handles multiple-character lexemes
+            # Handles string literals
+            if char == '"': # String literals
+                is_string_literal_open = not is_string_literal_open
+                if not is_string_literal_open:
+                    print(f'STRING "{string_literal}" {string_literal}')
+                    string_literal = ""
+                continue
+
+            if is_string_literal_open:
+                # Adds content to string literal until it is closed
+                string_literal += char
+                # print(f"[debug] string_literal: {string_literal}")
+                continue
+
+            # Handles other multiple-character lexemes
             if char == "=" and next_char == "=":
                 scanner("==", current_line)
                 index_to_ignore = i + 1
@@ -55,10 +71,15 @@ def main():
                 continue
             elif char in ["\t", " "]: # Ignore these
                 continue
-
             # Handles single-character lexemes
             else:
                 scanner(char, current_line)
+
+        # If we get here, but a string literal is still open, throw an error and exit early
+        if is_string_literal_open:
+            print(f"[line {current_line}] Error: Unterminated string.", file=sys.stderr)
+            print("EOF  null")
+            exit(65)
 
         print("EOF  null")
 
