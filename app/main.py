@@ -26,6 +26,7 @@ def main():
         ignore_rest_of_line = None
         is_string_literal_open = False
         string_literal = ""
+        number_literal = "" # Stored as string
 
         for i in range(file_contents_length):
             if i == index_to_ignore:
@@ -53,7 +54,14 @@ def main():
             if is_string_literal_open:
                 # Adds content to string literal until it is closed
                 string_literal += char
-                # print(f"[debug] string_literal: {string_literal}")
+                continue
+
+            # Handles number literals
+            if char.isdigit() or (char == '.' and next_char and next_char.isdigit()):
+                number_literal += char
+                if not next_char or not (next_char.isdigit() or next_char == '.'):
+                    print(f'NUMBER {number_literal} {float(number_literal)}')
+                    number_literal = ""
                 continue
 
             # Handles other multiple-character lexemes
