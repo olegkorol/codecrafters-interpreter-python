@@ -80,11 +80,7 @@ def main():
                 ignore_rest_of_line = current_line
                 continue
             elif char in ["\t", " "]: # Ignore these
-                # If we have an identifier at hand and find a tab or space, we return it
-                is_identifier_open = False
-                if identifier:
-                    print(f"IDENTIFIER {identifier} null")
-                identifier = ""
+                resolve_identifier(identifier)
                 continue
             elif (char.isalpha() or char == "_") or (is_identifier_open and char.isdigit()):
                 is_identifier_open = True
@@ -100,7 +96,7 @@ def main():
             exit(65)
 
         if is_identifier_open:
-            print(f"IDENTIFIER {identifier} null")
+            resolve_identifier(identifier)
         
         print("EOF  null")
 
@@ -116,10 +112,7 @@ def scanner(char, current_line):
 
     # If it gets to this function and we still have an identifier open, we need to close it
     if is_identifier_open:
-        is_identifier_open = False
-        if identifier:
-            print(f"IDENTIFIER {identifier} null")
-        identifier = ""
+        resolve_identifier(identifier)
 
     match char:
         case "(":
@@ -167,6 +160,22 @@ def scanner(char, current_line):
 
     return True
 
+def resolve_identifier(_identifier):
+    global is_identifier_open, identifier
+    reserved_words = ["and", "class", "else", "false", "for", "fun", "if", "nil", "or", "print", "return", "super", "this", "true", "var", "while"]
+
+    is_identifier_open = False
+
+    if not _identifier:
+        identifier = ""
+        return
+
+    if _identifier in reserved_words:
+        print(f"{_identifier.upper()} {_identifier} null")
+    else:
+        print(f"IDENTIFIER {_identifier} null")
+
+    identifier = ""
 
 if __name__ == "__main__":
     main()
