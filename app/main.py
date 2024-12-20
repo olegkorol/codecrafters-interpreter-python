@@ -1,9 +1,11 @@
 import sys
 
 scan_errors = False
+is_identifier_open = False
+identifier = ""
 
 def main():
-    global scan_errors
+    global scan_errors, is_identifier_open, identifier
 
     if len(sys.argv) < 3:
         print("Usage: ./your_program.sh tokenize <filename>", file=sys.stderr)
@@ -57,7 +59,7 @@ def main():
                 continue
 
             # Handles number literals
-            if char.isdigit() or (char == '.' and next_char and next_char.isdigit()):
+            if (char.isdigit() or (char == '.' and next_char and next_char.isdigit())) and not is_identifier_open:
                 number_literal += char
                 if not next_char or not (next_char.isdigit() or next_char == '.'):
                     print(f'NUMBER {number_literal} {float(number_literal)}')
@@ -78,7 +80,15 @@ def main():
                 ignore_rest_of_line = current_line
                 continue
             elif char in ["\t", " "]: # Ignore these
+                # If we have an identifier at hand and find a tab or space, we return it
+                is_identifier_open = False
+                if identifier:
+                    print(f"IDENTIFIER {identifier} null")
+                identifier = ""
                 continue
+            elif (char.isalpha() or char == "_") or (is_identifier_open and char.isdigit()):
+                is_identifier_open = True
+                identifier += char
             # Handles single-character lexemes
             else:
                 scanner(char, current_line)
@@ -89,6 +99,9 @@ def main():
             print("EOF  null")
             exit(65)
 
+        if is_identifier_open:
+            print(f"IDENTIFIER {identifier} null")
+        
         print("EOF  null")
 
         if scan_errors:
@@ -99,7 +112,14 @@ def main():
         print("EOF  null") # Placeholder, remove this line when implementing the scanner
 
 def scanner(char, current_line):
-    global scan_errors
+    global scan_errors, is_identifier_open, identifier
+
+    # If it gets to this function and we still have an identifier open, we need to close it
+    if is_identifier_open:
+        is_identifier_open = False
+        if identifier:
+            print(f"IDENTIFIER {identifier} null")
+        identifier = ""
 
     match char:
         case "(":
