@@ -1,28 +1,38 @@
 import sys
 
-scan_errors = False
-is_identifier_open = False
-identifier = ""
-
 def main():
-    global scan_errors, is_identifier_open, identifier
-
     if len(sys.argv) < 3:
-        print("Usage: ./your_program.sh tokenize <filename>", file=sys.stderr)
-        exit(1)
+        print("Usage: ./your_program.sh <tokenize | parse> <filename>", file=sys.stderr)
+        exit(64)
 
     command = sys.argv[1]
     filename = sys.argv[2]
 
-    if command != "tokenize":
+    if command not in ["tokenize", "parse"]:
         print(f"Unknown command: {command}", file=sys.stderr)
-        exit(1)
+        exit(64)
 
     with open(filename) as file:
         file_contents = file.read()
 
     if file_contents:
-        file_contents_length = len(file_contents)
+        match command:
+            case "tokenize":
+                return Tokenizer(file_contents).tokenize()
+            case "parse":
+                return print("Parsing...")
+    exit()
+        
+class Tokenizer:
+    scan_errors = False
+    is_identifier_open = False
+    identifier = ""
+
+    def __init__(self, file_contents: str):
+        self.file_contents: str = file_contents
+        self.file_contents_length: int = len(file_contents)
+
+    def tokenize(self):
         index_to_ignore = None # Used to store indexes that are part of multiple-character lexemes
         current_line = 1
         ignore_rest_of_line = None
@@ -30,12 +40,12 @@ def main():
         string_literal = ""
         number_literal = "" # Stored as string
 
-        for i in range(file_contents_length):
+        for i in range(self.file_contents_length):
             if i == index_to_ignore:
                 continue
 
-            char = file_contents[i]
-            next_char = file_contents[i + 1] if i < file_contents_length - 1 else None
+            char = self.file_contents[i]
+            next_char = self.file_contents[i + 1] if i < self.file_contents_length - 1 else None
 
             if char == "\n":
                 current_line += 1
@@ -59,7 +69,7 @@ def main():
                 continue
 
             # Handles number literals
-            if (char.isdigit() or (char == '.' and next_char and next_char.isdigit())) and not is_identifier_open:
+            if (char.isdigit() or (char == '.' and next_char and next_char.isdigit())) and not self.is_identifier_open:
                 number_literal += char
                 if not next_char or not (next_char.isdigit() or next_char == '.'):
                     print(f'NUMBER {number_literal} {float(number_literal)}')
@@ -68,26 +78,26 @@ def main():
 
             # Handles other multiple-character lexemes
             if char == "=" and next_char == "=":
-                scanner("==", current_line)
+                self._scan("==", current_line)
                 index_to_ignore = i + 1
             elif char == "!" and next_char == "=":
-                scanner("!=", current_line)
+                self._scan("!=", current_line)
                 index_to_ignore = i + 1
             elif char in ["<", ">"] and next_char == "=":
-                scanner(char + "=", current_line)
+                self._scan(char + "=", current_line)
                 index_to_ignore = i + 1
             elif char == "/" and next_char == "/": # Comments `//` - Stop here
                 ignore_rest_of_line = current_line
                 continue
             elif char in ["\t", " "]: # Ignore these
-                resolve_identifier(identifier)
+                self._resolve_identifier(self.identifier)
                 continue
-            elif (char.isalpha() or char == "_") or (is_identifier_open and char.isdigit()):
-                is_identifier_open = True
-                identifier += char
+            elif (char.isalpha() or char == "_") or (self.is_identifier_open and char.isdigit()):
+                self.is_identifier_open = True
+                self.identifier += char
             # Handles single-character lexemes
             else:
-                scanner(char, current_line)
+                self._scan(char, current_line)
 
         # If we get here, but a string literal is still open, throw an error and exit early
         if is_string_literal_open:
@@ -95,87 +105,81 @@ def main():
             print("EOF  null")
             exit(65)
 
-        if is_identifier_open:
-            resolve_identifier(identifier)
+        if self.is_identifier_open:
+            self._resolve_identifier(self.identifier)
         
         print("EOF  null")
 
-        if scan_errors:
+        if self.scan_errors:
             exit(65)
         else:
             exit(0)
-    else:
-        print("EOF  null") # Placeholder, remove this line when implementing the scanner
 
-def scanner(char, current_line):
-    global scan_errors, is_identifier_open, identifier
+    def _scan(self, char, current_line):
+        # If it gets to this function and we still have an identifier open, we need to close it
+        if self.is_identifier_open:
+            self._resolve_identifier(self.identifier)
 
-    # If it gets to this function and we still have an identifier open, we need to close it
-    if is_identifier_open:
-        resolve_identifier(identifier)
+        match char:
+            case "(":
+                print("LEFT_PAREN ( null")
+            case ")":
+                print("RIGHT_PAREN ) null")
+            case "{":
+                print("LEFT_BRACE { null")
+            case "}":
+                print("RIGHT_BRACE } null")
+            case "*":
+                print("STAR * null")
+            case ".":
+                print("DOT . null")
+            case ",":
+                print("COMMA , null")
+            case "+":
+                print("PLUS + null")
+            case "-":
+                print("MINUS - null")
+            case ";":
+                print("SEMICOLON ; null")
+            case "=":
+                print("EQUAL = null")
+            case "==":
+                print("EQUAL_EQUAL == null")
+            case "!":
+                print("BANG ! null")
+            case "!=":
+                print("BANG_EQUAL != null")
+            case "<":
+                print("LESS < null")
+            case "<=":
+                print("LESS_EQUAL <= null")
+            case ">":
+                print("GREATER > null")
+            case ">=":
+                print("GREATER_EQUAL >= null")
+            case "/":
+                print("SLASH / null")
+            case _:
+                print(f"[line {current_line}] Error: Unexpected character: {char}", file=sys.stderr)
+                self.scan_errors = True
+                return False
+        return True
 
-    match char:
-        case "(":
-            print("LEFT_PAREN ( null")
-        case ")":
-            print("RIGHT_PAREN ) null")
-        case "{":
-            print("LEFT_BRACE { null")
-        case "}":
-            print("RIGHT_BRACE } null")
-        case "*":
-            print("STAR * null")
-        case ".":
-            print("DOT . null")
-        case ",":
-            print("COMMA , null")
-        case "+":
-            print("PLUS + null")
-        case "-":
-            print("MINUS - null")
-        case ";":
-            print("SEMICOLON ; null")
-        case "=":
-            print("EQUAL = null")
-        case "==":
-            print("EQUAL_EQUAL == null")
-        case "!":
-            print("BANG ! null")
-        case "!=":
-            print("BANG_EQUAL != null")
-        case "<":
-            print("LESS < null")
-        case "<=":
-            print("LESS_EQUAL <= null")
-        case ">":
-            print("GREATER > null")
-        case ">=":
-            print("GREATER_EQUAL >= null")
-        case "/":
-            print("SLASH / null")
-        case _:
-            print(f"[line {current_line}] Error: Unexpected character: {char}", file=sys.stderr)
-            scan_errors = True
-            return False
+    def _resolve_identifier(self, identifier: str):
+        reserved_words = ["and", "class", "else", "false", "for", "fun", "if", "nil", "or", "print", "return", "super", "this", "true", "var", "while"]
 
-    return True
+        self.is_identifier_open = False
 
-def resolve_identifier(_identifier):
-    global is_identifier_open, identifier
-    reserved_words = ["and", "class", "else", "false", "for", "fun", "if", "nil", "or", "print", "return", "super", "this", "true", "var", "while"]
+        if not identifier:
+            self.identifier = ""
+            return
 
-    is_identifier_open = False
+        if identifier in reserved_words:
+            print(f"{identifier.upper()} {identifier} null")
+        else:
+            print(f"IDENTIFIER {identifier} null")
 
-    if not _identifier:
-        identifier = ""
-        return
-
-    if _identifier in reserved_words:
-        print(f"{_identifier.upper()} {_identifier} null")
-    else:
-        print(f"IDENTIFIER {_identifier} null")
-
-    identifier = ""
+        self.identifier = ""
 
 if __name__ == "__main__":
     main()
