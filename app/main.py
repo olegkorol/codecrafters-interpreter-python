@@ -1,6 +1,6 @@
 import sys
 from app.tokenizer import Tokenizer
-from app.parser import AstPrinter, Binary, Unary, Literal, Grouping
+from app.parser import parser
 
 def main():
     if len(sys.argv) < 3:
@@ -22,12 +22,7 @@ def main():
             Tokenizer(file_contents, print_to_stdout=True).tokenize()
         case "parse":
             tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-            printer = AstPrinter()
-            for token in tokens:
-                if token.split()[0] == "EOF":
-                    break
-                expression = Literal(token.split()[1])
-                print(printer.print(expression))
+            parser(tokens)
 
     exit()
 

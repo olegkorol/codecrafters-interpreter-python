@@ -81,9 +81,24 @@ class AstPrinter(ExprVisitor):
             parts.append(expr.accept(self))
         return f'({" ".join(parts)})'    
     
-    # def _dumb_print(self, expr: Expr) -> str:
-    #     if expr.value is None:
-    #         return 'nil'
-    #     if isinstance(expr.value, bool):
-    #        return str(expr.value).lower()
-    #     return str(expr.value)
+def parse_token(token: str) -> Expr:
+    if token.split()[0] == "EOF":
+        return None
+    elif token.split()[0] == "NUMBER" or token.split()[0] == "STRING":
+        expression = Literal(token.split()[2])
+        return expression
+    else:
+        expression = Literal(token.split()[1])
+        return expression
+
+def parser(tokens: list[str]) -> None:
+    printer = AstPrinter()
+    expression = None
+
+    for token in tokens:
+        expression = parse_token(token)
+        if expression is not None:
+            print(printer.print(expression))
+        else:
+            break
+
