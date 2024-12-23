@@ -74,7 +74,7 @@ class AstPrinter(ExprVisitor):
     def visit_literal(self, expr: Literal) -> str:
         if expr.value == 'nil':
             return 'nil'
-        return str(expr.value).lower()
+        return str(expr.value)#.lower()
 
     def visit_unary(self, expr: Unary) -> str:
         return self._parenthesize(expr.operator, expr.right)

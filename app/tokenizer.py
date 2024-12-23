@@ -53,6 +53,7 @@ class Tokenizer:
             if char == '"': # String literals
                 is_string_literal_open = not is_string_literal_open
                 if not is_string_literal_open:
+                    print(f'STRING "{string_literal}" {string_literal}') if self.print_to_stdout else None
                     self.result_tokens.append({"type": TokenType.STRING, "lexeme": string_literal, "literal": string_literal})
                     string_literal = ""
                 continue
@@ -66,6 +67,7 @@ class Tokenizer:
             if (char.isdigit() or (char == '.' and next_char and next_char.isdigit())) and not self.is_identifier_open:
                 number_literal += char
                 if not next_char or not (next_char.isdigit() or next_char == '.'):
+                    print(f"NUMBER {number_literal} {float(number_literal)}") if self.print_to_stdout else None
                     self.result_tokens.append({"type": TokenType.NUMBER, "lexeme": number_literal, "literal": float(number_literal)})
                     number_literal = ""
                 continue
