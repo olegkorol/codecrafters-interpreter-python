@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
+from app.tokenizer import TokenType
 
 @dataclass
 class Expr:
@@ -57,6 +58,10 @@ class Unary(Expr):
         return visitor.visit_unary(self)
 
 class AstPrinter(ExprVisitor):
+    """
+    This class is an implementation of the visitor interface.
+    It is used to print an AST in a human-readable Lisp-like format.
+    """
     def print(self, expr: Expr) -> str:
         return expr.accept(self)
     
@@ -77,21 +82,22 @@ class AstPrinter(ExprVisitor):
     def _parenthesize(self, name: str, *exprs: Expr) -> str:
         parts = [name]
         for expr in exprs:
-            # parts.append(' ')
             parts.append(expr.accept(self))
+        print(parts)
         return f'({" ".join(parts)})'    
-    
-def parse_token(token: str) -> Expr:
-    if token.split()[0] == "EOF":
+
+
+def parse_token(token: dict) -> Expr:
+    if token["type"] == TokenType.EOF:
         return None
-    elif token.split()[0] == "NUMBER" or token.split()[0] == "STRING":
-        expression = Literal(token.split()[2])
+    elif token["type"] == TokenType.NUMBER or token["type"] == TokenType.STRING:
+        expression = Literal(token["literal"])
         return expression
     else:
-        expression = Literal(token.split()[1])
+        expression = Literal(token["lexeme"])
         return expression
 
-def parser(tokens: list[str]) -> None:
+def parser(tokens: list[dict]) -> None:
     printer = AstPrinter()
     expression = None
 
