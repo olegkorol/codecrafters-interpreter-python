@@ -1,5 +1,6 @@
 import sys
 from enum import Enum
+from dataclasses import dataclass
 
 TokenType = Enum("TokenType", [
     "NUMBER", "STRING", "IDENTIFIER", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_BRACE", "RIGHT_BRACE",
@@ -10,11 +11,18 @@ TokenType = Enum("TokenType", [
     "THIS", "TRUE", "VAR", "WHILE"
 ])
 
+@dataclass
+class Token():
+    type: TokenType
+    lexeme: str
+    literal: str | int | float | None
+    line: int
+
 class Tokenizer:
     scan_errors = False
     is_identifier_open = False
     identifier = ""
-    result_tokens = []
+    result_tokens: list[Token] = []
 
     def __init__(self, file_contents: str, print_to_stdout: bool = False):
         self.file_contents: str = file_contents
@@ -31,7 +39,7 @@ class Tokenizer:
         
         if not len(self.file_contents):
             print("EOF  null") if self.print_to_stdout else None
-            self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None})
+            self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None, "line": current_line})
             return self.result_tokens
 
         for i in range(self.file_contents_length):
@@ -54,7 +62,7 @@ class Tokenizer:
                 is_string_literal_open = not is_string_literal_open
                 if not is_string_literal_open:
                     print(f'STRING "{string_literal}" {string_literal}') if self.print_to_stdout else None
-                    self.result_tokens.append({"type": TokenType.STRING, "lexeme": string_literal, "literal": string_literal})
+                    self.result_tokens.append({"type": TokenType.STRING, "lexeme": string_literal, "literal": string_literal, "line": current_line})
                     string_literal = ""
                 continue
 
@@ -68,7 +76,7 @@ class Tokenizer:
                 number_literal += char
                 if not next_char or not (next_char.isdigit() or next_char == '.'):
                     print(f"NUMBER {number_literal} {float(number_literal)}") if self.print_to_stdout else None
-                    self.result_tokens.append({"type": TokenType.NUMBER, "lexeme": number_literal, "literal": float(number_literal)})
+                    self.result_tokens.append({"type": TokenType.NUMBER, "lexeme": number_literal, "literal": float(number_literal), "line": current_line})
                     number_literal = ""
                 continue
 
@@ -86,7 +94,7 @@ class Tokenizer:
                 ignore_rest_of_line = current_line
                 continue
             elif char in ["\t", " "]: # Ignore these
-                self._resolve_identifier(self.identifier)
+                self._resolve_identifier(self.identifier, current_line)
                 continue
             elif (char.isalpha() or char == "_") or (self.is_identifier_open and char.isdigit()):
                 self.is_identifier_open = True
@@ -99,14 +107,14 @@ class Tokenizer:
         if is_string_literal_open:
             print(f"[line {current_line}] Error: Unterminated string.", file=sys.stderr)
             print("EOF  null") if self.print_to_stdout else None
-            self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None})
+            self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None, "line": current_line})
             exit(65)
 
         if self.is_identifier_open:
-            self._resolve_identifier(self.identifier)
+            self._resolve_identifier(self.identifier, current_line)
         
         print("EOF  null") if self.print_to_stdout else None
-        self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None})
+        self.result_tokens.append({"type": TokenType.EOF, "lexeme": "null", "literal": None, "line": current_line})
 
         if self.scan_errors:
             exit(65)
@@ -116,73 +124,73 @@ class Tokenizer:
     def _scan(self, char, current_line):
         # If it gets to this function and we still have an identifier open, we need to close it
         if self.is_identifier_open:
-            self._resolve_identifier(self.identifier)
+            self._resolve_identifier(self.identifier, current_line)
 
         match char:
             case "(":
                 print("LEFT_PAREN ( null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.LEFT_PAREN, "lexeme": "(", "literal": None})
+                self.result_tokens.append({"type": TokenType.LEFT_PAREN, "lexeme": "(", "literal": None, "line": current_line})
             case ")":
                 print("RIGHT_PAREN ) null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.RIGHT_PAREN, "lexeme": ")", "literal": None})
+                self.result_tokens.append({"type": TokenType.RIGHT_PAREN, "lexeme": ")", "literal": None, "line": current_line})
             case "{":
                 print("LEFT_BRACE { null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.LEFT_BRACE, "lexeme": "{", "literal": None})
+                self.result_tokens.append({"type": TokenType.LEFT_BRACE, "lexeme": "{", "literal": None, "line": current_line})
             case "}":
                 print("RIGHT_BRACE } null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.RIGHT_BRACE, "lexeme": "}", "literal": None})
+                self.result_tokens.append({"type": TokenType.RIGHT_BRACE, "lexeme": "}", "literal": None, "line": current_line})
             case "*":
                 print("STAR * null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.STAR, "lexeme": "*", "literal": None})
+                self.result_tokens.append({"type": TokenType.STAR, "lexeme": "*", "literal": None, "line": current_line})
             case ".":
                 print("DOT . null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.DOT, "lexeme": ".", "literal": None})
+                self.result_tokens.append({"type": TokenType.DOT, "lexeme": ".", "literal": None, "line": current_line})
             case ",":
                 print("COMMA , null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.COMMA, "lexeme": ",", "literal": None})
+                self.result_tokens.append({"type": TokenType.COMMA, "lexeme": ",", "literal": None, "line": current_line})
             case "+":
                 print("PLUS + null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.PLUS, "lexeme": "+", "literal": None})
+                self.result_tokens.append({"type": TokenType.PLUS, "lexeme": "+", "literal": None, "line": current_line})
             case "-":
                 print("MINUS - null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.MINUS, "lexeme": "-", "literal": None})
+                self.result_tokens.append({"type": TokenType.MINUS, "lexeme": "-", "literal": None, "line": current_line})
             case ";":
                 print("SEMICOLON ; null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.SEMICOLON, "lexeme": ";", "literal": None})
+                self.result_tokens.append({"type": TokenType.SEMICOLON, "lexeme": ";", "literal": None, "line": current_line})
             case "=":
                 print("EQUAL = null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.EQUAL, "lexeme": "=", "literal": None})
+                self.result_tokens.append({"type": TokenType.EQUAL, "lexeme": "=", "literal": None, "line": current_line})
             case "==":
                 print("EQUAL_EQUAL == null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.EQUAL_EQUAL, "lexeme": "==", "literal": None})
+                self.result_tokens.append({"type": TokenType.EQUAL_EQUAL, "lexeme": "==", "literal": None, "line": current_line})
             case "!":
                 print("BANG ! null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.BANG, "lexeme": "!", "literal": None})
+                self.result_tokens.append({"type": TokenType.BANG, "lexeme": "!", "literal": None, "line": current_line})
             case "!=":
                 print("BANG_EQUAL != null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.BANG_EQUAL, "lexeme": "!=", "literal": None})
+                self.result_tokens.append({"type": TokenType.BANG_EQUAL, "lexeme": "!=", "literal": None, "line": current_line})
             case "<":
                 print("LESS < null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.LESS, "lexeme": "<", "literal": None})
+                self.result_tokens.append({"type": TokenType.LESS, "lexeme": "<", "literal": None, "line": current_line})
             case "<=":
                 print("LESS_EQUAL <= null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.LESS_EQUAL, "lexeme": "<=", "literal": None})
+                self.result_tokens.append({"type": TokenType.LESS_EQUAL, "lexeme": "<=", "literal": None, "line": current_line})
             case ">":
                 print("GREATER > null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.GREATER, "lexeme": ">", "literal": None})
+                self.result_tokens.append({"type": TokenType.GREATER, "lexeme": ">", "literal": None, "line": current_line})
             case ">=":
                 print("GREATER_EQUAL >= null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.GREATER_EQUAL, "lexeme": ">=", "literal": None})
+                self.result_tokens.append({"type": TokenType.GREATER_EQUAL, "lexeme": ">=", "literal": None, "line": current_line})
             case "/":
                 print("SLASH / null") if self.print_to_stdout else None
-                self.result_tokens.append({"type": TokenType.SLASH, "lexeme": "/", "literal": None})
+                self.result_tokens.append({"type": TokenType.SLASH, "lexeme": "/", "literal": None, "line": current_line})
             case _:
                 print(f"[line {current_line}] Error: Unexpected character: {char}", file=sys.stderr)
                 self.scan_errors = True
                 return False
         return True
 
-    def _resolve_identifier(self, identifier: str):
+    def _resolve_identifier(self, identifier: str, current_line: int):
         reserved_words = ["and", "class", "else", "false", "for", "fun", "if", "nil", "or", "print", "return", "super", "this", "true", "var", "while"]
 
         self.is_identifier_open = False
@@ -193,9 +201,9 @@ class Tokenizer:
 
         if identifier in reserved_words:
             print(f"{identifier.upper()} {identifier} null") if self.print_to_stdout else None
-            self.result_tokens.append({"type": getattr(TokenType, identifier.upper()), "lexeme": identifier, "literal": None})
+            self.result_tokens.append({"type": getattr(TokenType, identifier.upper()), "lexeme": identifier, "literal": None, "line": current_line})
         else:
             print(f"IDENTIFIER {identifier} null") if self.print_to_stdout else None
-            self.result_tokens.append({"type": TokenType.IDENTIFIER, "lexeme": identifier, "literal": None})
+            self.result_tokens.append({"type": TokenType.IDENTIFIER, "lexeme": identifier, "literal": None, "line": current_line})
 
         self.identifier = ""

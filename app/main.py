@@ -1,6 +1,6 @@
 import sys
-from app.tokenizer import Tokenizer
-from app.parser import parser
+from app.tokenizer import Tokenizer, TokenType
+from app.parser import AstPrinter, Binary, Unary, Token, Literal, Grouping, Parser
 
 def main():
     if len(sys.argv) < 3:
@@ -22,7 +22,13 @@ def main():
             Tokenizer(file_contents, print_to_stdout=True).tokenize()
         case "parse":
             tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-            parser(tokens)
+            # print(f"-> SCANNED TOKENS:\n{tokens}\n")
+            ast = Parser(tokens).expression()
+            # print(f"-> PARSED AST:\n{ast}\n")
+            if ast is not None:
+                ast_print = AstPrinter().print(ast)
+                # print(f"-> PRETTY-PRINTED AST:\n{ast_print}\n")
+                print(ast_print)
 
     exit()
 
