@@ -24,7 +24,7 @@ def main():
             try:
                 tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
                 # print(f"-> SCANNED TOKENS:\n{tokens}\n")
-                ast = Parser(tokens).expression()
+                ast = Parser(tokens).parse()
                 # print(f"-> PARSED AST:\n{ast}\n")
                 if ast is not None:
                     ast_print = AstPrinter().print(ast)

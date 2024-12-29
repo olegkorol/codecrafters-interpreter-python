@@ -135,6 +135,9 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
 
+    def parse(self):
+        return self.expression()
+
     def _advance(self) -> None:
         """
         Consumes current token and returns it
@@ -248,29 +251,5 @@ class Parser:
             # Parenthesis expressions must always have a closing ")"
             self._consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
             return Grouping(expr)
-
-
-# def parse_token(token: dict) -> Expr:
-#     if token["type"] == TokenType.EOF:
-#         return None
-#     elif token["type"] == TokenType.NUMBER or token["type"] == TokenType.STRING:
-#         expression = Literal(token["literal"])
-#         return expression
-#     elif token["type"] == TokenType.LEFT_PAREN:
-#         expression = Grouping(token["lexeme"])
-#         return expression
-#     else:
-#         expression = Literal(token["lexeme"])
-#         return expression
-
-# def parser(tokens: list[dict]) -> None:
-#     printer = AstPrinter()
-#     expression = None
-
-#     for token in tokens:
-#         expression = parse_token(token)
-#         if expression is not None:
-#             print(printer.print(expression))
-#         else:
-#             break
-
+        
+        return error(self._peek(), "Expect expression.")
