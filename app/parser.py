@@ -8,12 +8,12 @@ class ParseError(RuntimeError):
     pass
 
 def error(token: Token, message: str):
-    if (token.type == TokenType.EOF):
-        print(f"[line {token.line}] at end {message}", file=sys.stderr)
+    if (token["type"] == TokenType.EOF):
+        print(f"[line {token["line"]}] at end: {message}", file=sys.stderr)
     else:
-        print(f"[line {token.line}] at '{token.lexeme}' {message}", file=sys.stderr)
+        print(f"[line {token["line"]}] at '{token["lexeme"]}': {message}", file=sys.stderr)
     
-    return ParseError()
+    raise ParseError()
 
 @dataclass
 class Expr:
