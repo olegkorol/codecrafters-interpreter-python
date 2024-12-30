@@ -14,6 +14,8 @@ def pretty_print(value: Any):
 			return f"{value:g}"
 		case None:
 			return "nil"
+		case bool():
+			return str(value).lower()
 		case _:
 			return value
 
