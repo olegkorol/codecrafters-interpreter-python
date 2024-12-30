@@ -1,7 +1,7 @@
 import sys
 from app.tokenizer import Tokenizer
 from app.parser import AstPrinter, Parser, ParseError
-from app.interpreter import Interpreter
+from app.interpreter import Interpreter, pretty_print
 
 def main():
     if len(sys.argv) < 3:
@@ -37,7 +37,7 @@ def main():
             tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
             ast = Parser(tokens).parse()
             value = Interpreter().evaluate(ast)
-            print(value)
+            print(pretty_print(value))
 
     exit()
 

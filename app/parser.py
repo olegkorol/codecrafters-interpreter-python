@@ -24,20 +24,20 @@ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
 class Expr(ABC):
     """Base class for all expressions"""
     @abstractmethod
-    def accept(self, visitor: 'ExprVisitor') -> str: ...
+    def accept(self, visitor: 'ExprVisitor') -> Any: ...
 
 @dataclass
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: 'ExprVisitor') -> str:
+    def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_literal(self)
 
 @dataclass 
 class Grouping(Expr):
     expression: Expr
 
-    def accept(self, visitor: 'ExprVisitor') -> str:
+    def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_grouping(self)
 
 @dataclass
@@ -45,16 +45,16 @@ class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: 'ExprVisitor') -> str:
+    def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_unary(self)
 
 @dataclass
 class Binary(Expr):
     left: Expr
-    operator: Token  
+    operator: Token
     right: Expr
 
-    def accept(self, visitor: 'ExprVisitor') -> str:
+    def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_binary(self)
 
 class ExprVisitor(ABC):
@@ -62,16 +62,16 @@ class ExprVisitor(ABC):
     Interface for the visitor pattern, used in AstPrinter.
     """
     @abstractmethod
-    def visit_binary(self, expr: 'Binary') -> str: ...
+    def visit_binary(self, expr: 'Binary') -> Any: ...
 
     @abstractmethod 
-    def visit_grouping(self, expr: 'Grouping') -> str: ...
+    def visit_grouping(self, expr: 'Grouping') -> Any: ...
 
     @abstractmethod
-    def visit_literal(self, expr: 'Literal') -> str: ...
+    def visit_literal(self, expr: 'Literal') -> Any: ...
 
     @abstractmethod
-    def visit_unary(self, expr: 'Unary') -> str: ...
+    def visit_unary(self, expr: 'Unary') -> Any: ...
 
 class AstPrinter(ExprVisitor):
     """
@@ -82,7 +82,7 @@ class AstPrinter(ExprVisitor):
         return expr.accept(self)
     
     def visit_binary(self, expr: Binary) -> str:
-        return self._parenthesize(expr.operator['lexeme'], expr.left, expr.right)
+        return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
 
     def visit_grouping(self, expr: Grouping) -> str:
         return self._parenthesize('group', expr.expression)
@@ -93,7 +93,7 @@ class AstPrinter(ExprVisitor):
         return str(expr.value)#.lower()
 
     def visit_unary(self, expr: Unary) -> str:
-        return self._parenthesize(expr.operator['lexeme'], expr.right)
+        return self._parenthesize(expr.operator.lexeme, expr.right)
 
     def _parenthesize(self, name: str, *exprs: Expr) -> str:
         parts = [name]
@@ -126,7 +126,7 @@ class Parser:
     def parse(self):
         return self.expression()
 
-    def _advance(self) -> None:
+    def _advance(self) -> Token:
         """
         Consumes current token and returns it
         """
@@ -153,7 +153,7 @@ class Parser:
         if self._isAtEnd():
             return False
         
-        return self._peek()['type'] == type
+        return self._peek().type == type
 
     def _consume(self, type: TokenType, message: str):
         if self._check(type):
@@ -162,7 +162,7 @@ class Parser:
         return error(self._peek(), message)
 
     def _isAtEnd(self) -> bool:
-        return self._peek()['type'] == TokenType.EOF
+        return self._peek().type == TokenType.EOF
     
     def _peek(self) -> Token:
         return self.tokens[self.current]
@@ -232,7 +232,7 @@ class Parser:
             return Literal('nil')
         
         if self._match(TokenType.NUMBER, TokenType.STRING):
-            return Literal(self._previous()['literal'])
+            return Literal(self._previous().literal)
         
         if self._match(TokenType.LEFT_PAREN):
             expr = self.expression()
@@ -246,9 +246,9 @@ class ParseError(RuntimeError):
     pass
 
 def error(token: Token, message: str):
-    if (token["type"] == TokenType.EOF):
-        print(f"[line {token["line"]}] at end: {message}", file=sys.stderr)
+    if (token.type == TokenType.EOF):
+        print(f"[line {token.line}] at end: {message}", file=sys.stderr)
     else:
-        print(f"[line {token["line"]}] at '{token["lexeme"]}': {message}", file=sys.stderr)
+        print(f"[line {token.line}] at '{token.lexeme}': {message}", file=sys.stderr)
     
     raise ParseError()

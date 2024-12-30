@@ -2,8 +2,23 @@ from app.parser import Binary, ExprVisitor, Expr, Grouping, Literal, Unary
 from app.tokenizer import TokenType
 from typing import Any
 
+def pretty_print(value: Any):
+	"""
+	Pretty-printer to satisfy:
+	> For the number literals, the tester will check that the program prints the number
+	  with the minimum number of decimal places without losing precision.
+	  (For example, 10.40 should be printed as 10.4).
+	"""
+	match value:
+		case float():
+			return f"{value:g}"
+		case None:
+			return "nil"
+		case _:
+			return value
+
 class Interpreter(ExprVisitor):
-	def evaluate(self, expr: Expr):
+	def evaluate(self, expr: Expr) -> Any:
 		return expr.accept(self)
 	
 	def _isTruthy(self, value: Any):
@@ -19,28 +34,29 @@ class Interpreter(ExprVisitor):
 			return False
 		return True
 
-	def visit_literal(self, expr: Literal) -> str:
+	def visit_literal(self, expr: Literal) -> Any:
 		return expr.value
-	
-	def visit_grouping(self, expr: Grouping) -> str:
+
+	def visit_grouping(self, expr: Grouping) -> Any:
 		return self.evaluate(expr.expression)
 	
-	def visit_unary(self, expr: Unary) -> str:
+	def visit_unary(self, expr: Unary) -> Any:
 		right = self.evaluate(expr.right)
 
-		match expr.operator["type"]:
+		match expr.operator.type:
 			case TokenType.MINUS:
-				return -(right)
+				if not isinstance(right, str):
+					return -(right)
 			case TokenType.BANG:
 				return str(not self._isTruthy(right)).lower() # we want to output the bool as string
 			case _:
 				return "nil"
 	
-	def visit_binary(self, expr: Binary) -> str:
+	def visit_binary(self, expr: Binary) -> Any:
 		left = self.evaluate(expr.left)
 		right = self.evaluate(expr.right)
 
-		match expr.operator["type"]:
+		match expr.operator.type:
 			case TokenType.PLUS:
 				if type(left) == type(right):
 					return left + right
