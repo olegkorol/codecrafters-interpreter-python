@@ -4,40 +4,6 @@ from dataclasses import dataclass
 from typing import Any
 from app.tokenizer import TokenType, Token
 
-class ParseError(RuntimeError):
-    pass
-
-def error(token: Token, message: str):
-    if (token["type"] == TokenType.EOF):
-        print(f"[line {token["line"]}] at end: {message}", file=sys.stderr)
-    else:
-        print(f"[line {token["line"]}] at '{token["lexeme"]}': {message}", file=sys.stderr)
-    
-    raise ParseError()
-
-@dataclass
-class Expr:
-    """Base class for all expressions"""
-    pass
-
-class ExprVisitor(ABC):
-    """Interface for the visitor pattern"""
-    @abstractmethod
-    def visit_binary(self, expr: 'Binary') -> str:
-        pass
-
-    @abstractmethod 
-    def visit_grouping(self, expr: 'Grouping') -> str:
-        pass
-
-    @abstractmethod
-    def visit_literal(self, expr: 'Literal') -> str:
-        pass
-
-    @abstractmethod
-    def visit_unary(self, expr: 'Unary') -> str:
-        pass
-
 """
 (5.1.3) A Grammar for Lox expressions
 
@@ -55,35 +21,57 @@ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
 """
 
 @dataclass
-class Binary(Expr):
-    left: Expr
-    operator: Token  
-    right: Expr
-
-    def accept(self, visitor: ExprVisitor) -> str:
-        return visitor.visit_binary(self)
-
-@dataclass 
-class Grouping(Expr):
-    expression: Expr
-
-    def accept(self, visitor: ExprVisitor) -> str:
-        return visitor.visit_grouping(self)
+class Expr(ABC):
+    """Base class for all expressions"""
+    @abstractmethod
+    def accept(self, visitor: 'ExprVisitor') -> str: ...
 
 @dataclass
 class Literal(Expr):
     value: Any
 
-    def accept(self, visitor: ExprVisitor) -> str:
+    def accept(self, visitor: 'ExprVisitor') -> str:
         return visitor.visit_literal(self)
+
+@dataclass 
+class Grouping(Expr):
+    expression: Expr
+
+    def accept(self, visitor: 'ExprVisitor') -> str:
+        return visitor.visit_grouping(self)
 
 @dataclass
 class Unary(Expr):
     operator: Token
     right: Expr
 
-    def accept(self, visitor: ExprVisitor) -> str:
+    def accept(self, visitor: 'ExprVisitor') -> str:
         return visitor.visit_unary(self)
+
+@dataclass
+class Binary(Expr):
+    left: Expr
+    operator: Token  
+    right: Expr
+
+    def accept(self, visitor: 'ExprVisitor') -> str:
+        return visitor.visit_binary(self)
+
+class ExprVisitor(ABC):
+    """
+    Interface for the visitor pattern, used in AstPrinter.
+    """
+    @abstractmethod
+    def visit_binary(self, expr: 'Binary') -> str: ...
+
+    @abstractmethod 
+    def visit_grouping(self, expr: 'Grouping') -> str: ...
+
+    @abstractmethod
+    def visit_literal(self, expr: 'Literal') -> str: ...
+
+    @abstractmethod
+    def visit_unary(self, expr: 'Unary') -> str: ...
 
 class AstPrinter(ExprVisitor):
     """
@@ -253,3 +241,14 @@ class Parser:
             return Grouping(expr)
         
         return error(self._peek(), "Expect expression.")
+
+class ParseError(RuntimeError):
+    pass
+
+def error(token: Token, message: str):
+    if (token["type"] == TokenType.EOF):
+        print(f"[line {token["line"]}] at end: {message}", file=sys.stderr)
+    else:
+        print(f"[line {token["line"]}] at '{token["lexeme"]}': {message}", file=sys.stderr)
+    
+    raise ParseError()

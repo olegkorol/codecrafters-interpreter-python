@@ -23,13 +23,13 @@ def main():
         case "parse":
             try:
                 tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-                # print(f"-> SCANNED TOKENS:\n{tokens}\n")
+                print(f"-> SCANNED TOKENS:\n\n{tokens}\n")
                 ast = Parser(tokens).parse()
-                # print(f"-> PARSED AST:\n{ast}\n")
+                print(f"-> PARSED AST:\n\n{ast}\n")
                 if ast is not None:
                     ast_print = AstPrinter().print(ast)
-                    # print(f"-> PRETTY-PRINTED AST:\n{ast_print}\n")
-                    print(ast_print)
+                    print(f"-> PRETTY-PRINTED AST:\n\n{ast_print}\n")
+                    # print(ast_print)
             except (ParseError, Exception):
                 exit(65)
 
