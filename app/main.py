@@ -1,7 +1,11 @@
 import sys
 from app.tokenizer import Tokenizer
 from app.parser import AstPrinter, Parser, ParseError
-from app.interpreter import Interpreter, pretty_print
+from app.interpreter import Interpreter, pretty_print, LoxRuntimeError
+
+
+
+
 
 def main():
     if len(sys.argv) < 3:
@@ -11,7 +15,7 @@ def main():
     command = sys.argv[1]
     filename = sys.argv[2]
 
-    if command not in ["tokenize", "parse", "evaluate"]:
+    if command not in ["tokenize", "parse", "evaluate", "interpret"]:
         print(f"Unknown command: {command}", file=sys.stderr)
         exit(64)
 
@@ -34,10 +38,13 @@ def main():
             except (ParseError, Exception):
                 exit(65)
         case "evaluate":
-            tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-            ast = Parser(tokens).parse()
-            value = Interpreter().evaluate(ast)
-            print(pretty_print(value))
+            try:
+                tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
+                ast = Parser(tokens).parse()
+                Interpreter().interpret(ast)
+            except LoxRuntimeError as error:
+                print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)
+                exit(70)
 
     exit()
 

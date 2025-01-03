@@ -179,7 +179,7 @@ class Parser:
         expr = self.comparison()
 
         while self._match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL):
-            operator: Token = self._previous() # Is this right?
+            operator: Token = self._previous()
             right: Expr = self.comparison()
             expr = Binary(expr, operator, right)
         
@@ -225,11 +225,11 @@ class Parser:
     
     def primary(self) -> Expr:
         if self._match(TokenType.FALSE):
-            return Literal('false')
+            return Literal(False)
         if self._match(TokenType.TRUE):
-            return Literal('true')
+            return Literal(True)
         if self._match(TokenType.NIL):
-            return Literal('nil')
+            return Literal(None)
         
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self._previous().literal)
@@ -243,7 +243,7 @@ class Parser:
         return error(self._peek(), "Expect expression.")
 
 class ParseError(RuntimeError):
-    pass
+    ...
 
 def error(token: Token, message: str):
     if (token.type == TokenType.EOF):
