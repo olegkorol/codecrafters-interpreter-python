@@ -2,7 +2,7 @@ import sys
 from app.grammar.expressions import Expr
 from app.grammar.statements import Stmt
 from app.utils import pretty_print
-from app.tokenizer import Tokenizer
+from app.scanner import Scanner
 from app.parser import Parser, ParseError
 from app.ast_printer import AstPrinter
 from app.interpreter import Interpreter, LoxRuntimeError
@@ -24,10 +24,10 @@ def main():
 
     match command:
         case "tokenize":
-            Tokenizer(file_contents, print_to_stdout=True).tokenize()
+            Scanner(file_contents, print_to_stdout=True).tokenize()
         case "parse":
             try:
-                tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
+                tokens = Scanner(file_contents, print_to_stdout=False).tokenize()
                 parser = Parser(tokens)
                 ast: Expr = parser.parse_expr()
                 if ast is not None:
@@ -36,7 +36,7 @@ def main():
                 exit(65)
         case "evaluate": # Only for single-line expressions (no statements)
             try:
-                tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
+                tokens = Scanner(file_contents, print_to_stdout=False).tokenize()
                 parser = Parser(tokens)
                 ast: Expr = parser.parse_expr()
                 print(pretty_print(Interpreter().evaluate(ast)))
@@ -47,7 +47,7 @@ def main():
                 exit(70)
         case "run":
             try:
-                tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
+                tokens = Scanner(file_contents, print_to_stdout=False).tokenize()
                 statements: list[Stmt] = Parser(tokens).parse()
                 Interpreter().interpret(statements)
             except LoxRuntimeError as error:

@@ -1,7 +1,7 @@
 import sys
 from app.types import Token, TokenType
 
-class Tokenizer:
+class Scanner:
     scan_errors = False
     is_identifier_open = False
     identifier = ""
