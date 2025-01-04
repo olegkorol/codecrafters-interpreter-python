@@ -44,7 +44,7 @@ def main():
                 print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)
                 exit(70)
             except ParseError:
-                exit(70)
+                exit(65)
         case "run":
             try:
                 tokens = Scanner(file_contents, print_to_stdout=False).tokenize()
@@ -52,7 +52,7 @@ def main():
                 Interpreter().interpret(statements)
             except LoxRuntimeError as error:
                 print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)
-                exit(65)
+                exit(70)
             except ParseError:
                 exit(65)
 
