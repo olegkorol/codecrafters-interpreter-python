@@ -37,8 +37,14 @@ class Interpreter(ExprVisitor):
 	def _isTruthy(self, value: Any):
 		if value is None:
 			return False
+		if value == 'nil':
+			return False
 		if isinstance(value, bool):
 			return value
+		if value == 'true':
+			return True
+		if value == 'false':
+			return False
 		return True
 	
 	@staticmethod
@@ -59,7 +65,8 @@ class Interpreter(ExprVisitor):
 
 		match expr.operator.type:
 			case TokenType.MINUS:
-				if isinstance(right, (int, float)):
+				# bool is a subclass of int in Python, hence the explicit exclusion
+				if isinstance(right, (int, float)) and not isinstance(right, bool):
 					return -(right)
 				else:
 					raise LoxRuntimeError(expr.operator, "Operand must be a number.")
