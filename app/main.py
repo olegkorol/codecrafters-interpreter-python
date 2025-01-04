@@ -1,11 +1,11 @@
 import sys
 from app.grammar.expressions import Expr
 from app.grammar.statements import Stmt
-from app.utils import pretty_print
+from app.utils import pretty_print, LoxRuntimeError
 from app.scanner import Scanner
 from app.parser import Parser, ParseError
 from app.ast_printer import AstPrinter
-from app.interpreter import Interpreter, LoxRuntimeError
+from app.interpreter import Interpreter
 
 def main():
     if len(sys.argv) < 3:

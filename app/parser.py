@@ -1,10 +1,11 @@
 import sys
 from app.types import TokenType, Token
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal
-from app.grammar.statements import Stmt, Print, Expression
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable
+from app.grammar.statements import Stmt, Print, Expression, Var
 
 """
 (6.2) Recursive Descent Parsing
+(8.2.) Global variables [adds IDENTIFIER to `primary`]
 
 expression     → equality ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
@@ -14,7 +15,7 @@ factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | primary ;
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+               | "(" expression ")" | IDENTIFIER ;
 """
 
 class Parser:
@@ -24,13 +25,13 @@ class Parser:
         self.tokens = tokens
 
     def parse(self) -> list[Stmt]:
-        statements: list[Stmt] = []
+        declarations: list[Stmt] = []
         while not self._isAtEnd():
-            statements.append(self.statement())
-        return statements
+            declarations.append(self.declaration())
+        return declarations
     
     def parse_expr(self) -> Expr:
-        return self.expression()        
+        return self.expression()
 
     def _advance(self) -> Token:
         """
@@ -62,6 +63,9 @@ class Parser:
         return self._peek().type == type
 
     def _consume(self, type: TokenType, message: str):
+        """
+        Consumes token if it matches token type. Otherwise, raises an error.
+        """
         if self._check(type):
             return self._advance()
         
@@ -76,7 +80,23 @@ class Parser:
     def _previous(self) -> Token:
         return self.tokens[self.current - 1]
     
-    # ----- Handles statements -----
+    # ----- Handles declarations and statements -----
+
+    def declaration(self) -> Stmt:
+        if self._match(TokenType.VAR):
+            return self.variable_declaration()
+        return self.statement()
+        # TODO: add `synchronize()` in an `except` clause for error handling
+    
+    def variable_declaration(self) -> Stmt:
+        name: Token = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+
+        initializer: Expr | None = None
+        if self._match(TokenType.EQUAL):
+            initializer = self.expression()
+
+        self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        return Var(name, initializer) # Stmt.Print
 
     def statement(self) -> Stmt:
         if self._match(TokenType.PRINT):
@@ -85,13 +105,13 @@ class Parser:
 
     def print_stmt(self) -> Stmt:
         value: Expr = self.expression()
-        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.") # TODO: try to re-add this
         self._match(TokenType.SEMICOLON)
         return Print(value) # Stmt.Print
     
     def expression_stmt(self) -> Stmt:
         expr: Expr = self.expression()
-        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.") # TODO: try to re-add this
         self._match(TokenType.SEMICOLON)
         return Expression(expr) # Stmt.Expression
 
@@ -155,10 +175,10 @@ class Parser:
             return Literal(True)
         if self._match(TokenType.NIL):
             return Literal(None)
-        
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self._previous().literal)
-        
+        if self._match(TokenType.IDENTIFIER):
+            return Variable(self._previous())
         if self._match(TokenType.LEFT_PAREN):
             expr = self.expression()
             # Parenthesis expressions must always have a closing ")"

@@ -1,4 +1,5 @@
 from typing import Any
+from app.types import Token
 
 def pretty_print(value: Any):
 	"""
@@ -16,3 +17,12 @@ def pretty_print(value: Any):
 			return str(value).lower()
 		case _:
 			return value
+		
+class LoxRuntimeError(RuntimeError):
+	message: str
+	token: Token
+
+	def __init__(self, token: Token, message: str):
+		super().__init__(message)
+		self.message = message
+		self.token = token

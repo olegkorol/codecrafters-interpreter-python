@@ -1,10 +1,13 @@
 from typing import Any
 from app.types import TokenType, Token
-from app.utils import pretty_print
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, ExprVisitor
-from app.grammar.statements import Stmt, Print, Expression, StmtVisitor
+from app.utils import pretty_print, LoxRuntimeError
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
+from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var
+from app.environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
+	_environment = Environment()
+
 	def interpret(self, statements: list[Stmt]) -> Any:
 		for statement in statements:
 			self.execute(statement)
@@ -52,6 +55,13 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	
 	# ----- Handles statements (StmtVisitor) -----
 
+	def visit_var_stmt(self, stmt: Var) -> Any:
+		value = None
+		if stmt.initializer is not None:
+			value = self.evaluate(stmt.initializer)
+		self._environment.define(stmt.name.lexeme, value)
+		return None
+	
 	def visit_expression_stmt(self, stmt: Expression) -> None:
 		self.evaluate(stmt.expression)
 	
@@ -81,6 +91,9 @@ class Interpreter(ExprVisitor, StmtVisitor):
 				return not self._isTruthy(right)
 			case _:
 				return "nil"
+	
+	def visit_variable(self, expr: Variable) -> Any:
+		return self._environment.get(expr.name)
 	
 	def visit_binary(self, expr: Binary) -> Any:
 		left = self.evaluate(expr.left)
@@ -124,13 +137,3 @@ class Interpreter(ExprVisitor, StmtVisitor):
 				return left == right
 			case _:
 				return None
-			
-
-class LoxRuntimeError(RuntimeError):
-	message: str
-	token: Token
-
-	def __init__(self, token: Token, message: str):
-		super().__init__(message)
-		self.message = message
-		self.token = token

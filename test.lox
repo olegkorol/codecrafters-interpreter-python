@@ -1,2 +1,12 @@
-print "79" + "baz";
-print false * (18 + 84);
+var x = 10;
+var y = x;
+print y;
+
+var z = "hello";
+print z;
+
+var a = true;
+print !!a;
+
+var b = x + y;
+print b;

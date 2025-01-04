@@ -1,14 +1,27 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod 
 from typing import Any
+from app.types import Token
 from app.grammar.expressions import Expr
 
 """
 (8.1) Statements
+(8.2) Variable syntax [adds declarations]
 
 program        → statement* EOF ;
 statement      → exprStmt
                | printStmt ;
+exprStmt       → expression ";" ;
+printStmt      → "print" expression ";" ;
+
+Result:
+
+program        → declaration* EOF ;
+declaration    → varDecl
+               | statement ;
+statement      → exprStmt
+               | printStmt ;
+varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
 """
@@ -18,6 +31,14 @@ class Stmt(ABC):
     """Base class for all statements"""
     @abstractmethod
     def accept(self, visitor: 'StmtVisitor') -> Any: ...
+
+@dataclass
+class Var(Stmt):
+    name: Token
+    initializer: Expr | None = None
+
+    def accept(self, visitor: 'StmtVisitor') -> Any:
+        return visitor.visit_var_stmt(self)
 
 @dataclass
 class Expression(Stmt):
@@ -42,3 +63,6 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_print_stmt(self, stmt: Stmt) -> Any: ...
+
+    @abstractmethod
+    def visit_var_stmt(self, stmt: Stmt) -> Any: ...
