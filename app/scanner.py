@@ -34,6 +34,8 @@ class Scanner:
 
             if char == "\n":
                 current_line += 1
+                if is_string_literal_open:
+                    string_literal += "\n"
                 continue
 
             # This is set in action when we find a comment. The rest of the line is ignored
