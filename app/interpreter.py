@@ -1,23 +1,7 @@
 from app.parser import Binary, ExprVisitor, Expr, Grouping, Literal, Unary
 from app.tokenizer import TokenType, Token
+from app.utils import pretty_print
 from typing import Any
-
-def pretty_print(value: Any):
-	"""
-	Pretty-printer to satisfy:
-	> For the number literals, the tester will check that the program prints the number
-	  with the minimum number of decimal places without losing precision.
-	  (For example, 10.40 should be printed as 10.4).
-	"""
-	match value:
-		case float():
-			return f"{value:g}"
-		case None:
-			return "nil"
-		case bool():
-			return str(value).lower()
-		case _:
-			return value
 
 class Interpreter(ExprVisitor):
 	def interpret(self, expr: Expr) -> None:
@@ -49,7 +33,10 @@ class Interpreter(ExprVisitor):
 	
 	@staticmethod
 	def _checkNumberOperands(operator: Token, left: Any, right: Any):
-		if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+		if (
+			(isinstance(left, (int, float)) and not isinstance(left, bool)) and
+			(isinstance(right, (int, float)) and not isinstance(right, bool))
+		):
 			return
 		else:
 			raise LoxRuntimeError(operator, "Operands must be numbers.")
@@ -83,7 +70,10 @@ class Interpreter(ExprVisitor):
 			case TokenType.PLUS:
 				if isinstance(left, str) and isinstance(right, str):
 					return left + right
-				elif isinstance(left, (int, float)) and isinstance(right, (int, float)):
+				elif (
+					(isinstance(left, (int, float)) and not isinstance(left, bool)) and
+					(isinstance(right, (int, float)) and not isinstance(right, bool))
+				):
 					return left + right
 				else:
 					raise LoxRuntimeError(expr.operator, "Operands must be two numbers or two strings.")

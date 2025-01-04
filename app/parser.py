@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from app.tokenizer import TokenType, Token
+from app.utils import pretty_print
 
 """
 (5.1.3) A Grammar for Lox expressions
@@ -88,9 +89,11 @@ class AstPrinter(ExprVisitor):
         return self._parenthesize('group', expr.expression)
 
     def visit_literal(self, expr: Literal) -> str:
-        if expr.value == 'nil':
+        if expr.value == None:
             return 'nil'
-        return str(expr.value)#.lower()
+        if isinstance(expr.value, bool):
+            return pretty_print(expr.value)
+        return str(expr.value)
 
     def visit_unary(self, expr: Unary) -> str:
         return self._parenthesize(expr.operator.lexeme, expr.right)
@@ -225,11 +228,11 @@ class Parser:
     
     def primary(self) -> Expr:
         if self._match(TokenType.FALSE):
-            return Literal('false')
+            return Literal(False)
         if self._match(TokenType.TRUE):
-            return Literal('true')
+            return Literal(True)
         if self._match(TokenType.NIL):
-            return Literal('nil')
+            return Literal(None)
         
         if self._match(TokenType.NUMBER, TokenType.STRING):
             return Literal(self._previous().literal)
