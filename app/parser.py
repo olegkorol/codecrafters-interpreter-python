@@ -1,110 +1,7 @@
 import sys
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Any
-from app.tokenizer import TokenType, Token
-from app.utils import pretty_print
-
-"""
-(5.1.3) A Grammar for Lox expressions
-
-expression     → literal
-               | unary
-               | binary
-               | grouping ;
-
-literal        → NUMBER | STRING | "true" | "false" | "nil" ;
-grouping       → "(" expression ")" ;
-unary          → ( "-" | "!" ) expression ;
-binary         → expression operator expression ;
-operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
-               | "+"  | "-"  | "*" | "/" ;
-"""
-
-@dataclass
-class Expr(ABC):
-    """Base class for all expressions"""
-    @abstractmethod
-    def accept(self, visitor: 'ExprVisitor') -> Any: ...
-
-@dataclass
-class Literal(Expr):
-    value: Any
-
-    def accept(self, visitor: 'ExprVisitor') -> Any:
-        return visitor.visit_literal(self)
-
-@dataclass 
-class Grouping(Expr):
-    expression: Expr
-
-    def accept(self, visitor: 'ExprVisitor') -> Any:
-        return visitor.visit_grouping(self)
-
-@dataclass
-class Unary(Expr):
-    operator: Token
-    right: Expr
-
-    def accept(self, visitor: 'ExprVisitor') -> Any:
-        return visitor.visit_unary(self)
-
-@dataclass
-class Binary(Expr):
-    left: Expr
-    operator: Token
-    right: Expr
-
-    def accept(self, visitor: 'ExprVisitor') -> Any:
-        return visitor.visit_binary(self)
-
-class ExprVisitor(ABC):
-    """
-    Interface for the visitor pattern, used in AstPrinter.
-    """
-    @abstractmethod
-    def visit_binary(self, expr: 'Binary') -> Any: ...
-
-    @abstractmethod 
-    def visit_grouping(self, expr: 'Grouping') -> Any: ...
-
-    @abstractmethod
-    def visit_literal(self, expr: 'Literal') -> Any: ...
-
-    @abstractmethod
-    def visit_unary(self, expr: 'Unary') -> Any: ...
-
-class AstPrinter(ExprVisitor):
-    """
-    This class is an implementation of the visitor interface.
-    It is used to print an AST in a human-readable Lisp-like format.
-    """
-    def print(self, expr: Expr) -> str:
-        return expr.accept(self)
-    
-    def visit_binary(self, expr: Binary) -> str:
-        return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
-
-    def visit_grouping(self, expr: Grouping) -> str:
-        return self._parenthesize('group', expr.expression)
-
-    def visit_literal(self, expr: Literal) -> str:
-        if expr.value == None:
-            return 'nil'
-        if isinstance(expr.value, bool):
-            return pretty_print(expr.value)
-        return str(expr.value)
-
-    def visit_unary(self, expr: Unary) -> str:
-        return self._parenthesize(expr.operator.lexeme, expr.right)
-
-    def _parenthesize(self, name: str, *exprs: Expr) -> str:
-        parts = [name]
-        for expr in exprs:
-            parts.append(expr.accept(self))
-        # print(f"-> {parts}")
-        return f'({" ".join(parts)})'    
-
+from app.types import TokenType, Token
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal
+from app.grammar.statements import Stmt, Print, Expression
 
 """
 (6.2) Recursive Descent Parsing
@@ -126,8 +23,14 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
 
-    def parse(self):
-        return self.expression()
+    def parse(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+        while not self._isAtEnd():
+            statements.append(self.statement())
+        return statements
+    
+    def parse_expr(self) -> Expr:
+        return self.expression()        
 
     def _advance(self) -> Token:
         """
@@ -173,7 +76,26 @@ class Parser:
     def _previous(self) -> Token:
         return self.tokens[self.current - 1]
     
-    # ----------
+    # ----- Handles statements -----
+
+    def statement(self) -> Stmt:
+        if self._match(TokenType.PRINT):
+            return self.print_stmt()
+        return self.expression_stmt()
+
+    def print_stmt(self) -> Stmt:
+        value: Expr = self.expression()
+        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        self._match(TokenType.SEMICOLON)
+        return Print(value) # Stmt.Print
+    
+    def expression_stmt(self) -> Stmt:
+        expr: Expr = self.expression()
+        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
+        self._match(TokenType.SEMICOLON)
+        return Expression(expr) # Stmt.Expression
+
+    # ----- Handles expressions -----
 
     def expression(self) -> Expr:
         return self.equality()

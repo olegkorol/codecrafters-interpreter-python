@@ -1,22 +1,5 @@
 import sys
-from enum import Enum
-from dataclasses import dataclass
-
-TokenType = Enum("TokenType", [
-    "NUMBER", "STRING", "IDENTIFIER", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_BRACE", "RIGHT_BRACE",
-    "STAR", "DOT", "COMMA", "PLUS", "MINUS", "SEMICOLON", "EQUAL", "EQUAL_EQUAL", "BANG",
-    "BANG_EQUAL", "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL", "SLASH", "EOF",
-    # Reserved words
-    "AND", "CLASS", "ELSE", "FALSE", "FOR", "FUN", "IF", "NIL", "OR", "PRINT", "RETURN", "SUPER",
-    "THIS", "TRUE", "VAR", "WHILE"
-])
-
-@dataclass
-class Token():
-    type: TokenType
-    lexeme: str
-    literal: str | int | float | None
-    line: int
+from app.types import Token, TokenType
 
 class Tokenizer:
     scan_errors = False

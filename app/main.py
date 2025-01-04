@@ -1,11 +1,11 @@
 import sys
+from app.grammar.expressions import Expr
+from app.grammar.statements import Stmt
+from app.utils import pretty_print
 from app.tokenizer import Tokenizer
-from app.parser import AstPrinter, Parser, ParseError
-from app.interpreter import Interpreter, pretty_print, LoxRuntimeError
-
-
-
-
+from app.parser import Parser, ParseError
+from app.ast_printer import AstPrinter
+from app.interpreter import Interpreter, LoxRuntimeError
 
 def main():
     if len(sys.argv) < 3:
@@ -15,7 +15,7 @@ def main():
     command = sys.argv[1]
     filename = sys.argv[2]
 
-    if command not in ["tokenize", "parse", "evaluate", "interpret"]:
+    if command not in ["tokenize", "parse", "evaluate", "interpret", "run"]:
         print(f"Unknown command: {command}", file=sys.stderr)
         exit(64)
 
@@ -28,23 +28,33 @@ def main():
         case "parse":
             try:
                 tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-                # print(f"-> SCANNED TOKENS:\n\n{tokens}\n")
-                ast = Parser(tokens).parse()
-                # print(f"-> PARSED AST:\n\n{ast}\n")
+                parser = Parser(tokens)
+                ast: Expr = parser.parse_expr()
                 if ast is not None:
-                    ast_print = AstPrinter().print(ast)
-                    # print(f"-> PRETTY-PRINTED AST:\n\n{ast_print}\n")
-                    print(ast_print)
-            except (ParseError, Exception):
+                    print(AstPrinter().print(ast))
+            except (ParseError):
                 exit(65)
-        case "evaluate":
+        case "evaluate": # Only for single-line expressions (no statements)
             try:
                 tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
-                ast = Parser(tokens).parse()
-                Interpreter().interpret(ast)
+                parser = Parser(tokens)
+                ast: Expr = parser.parse_expr()
+                print(pretty_print(Interpreter().evaluate(ast)))
             except LoxRuntimeError as error:
                 print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)
                 exit(70)
+            except ParseError:
+                exit(70)
+        case "run":
+            try:
+                tokens = Tokenizer(file_contents, print_to_stdout=False).tokenize()
+                statements: list[Stmt] = Parser(tokens).parse()
+                Interpreter().interpret(statements)
+            except LoxRuntimeError as error:
+                print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)
+                exit(65)
+            except ParseError:
+                exit(65)
 
     exit()
 

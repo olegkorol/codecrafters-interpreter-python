@@ -1,16 +1,24 @@
-from app.parser import Binary, ExprVisitor, Expr, Grouping, Literal, Unary
-from app.tokenizer import TokenType, Token
-from app.utils import pretty_print
 from typing import Any
+from app.types import TokenType, Token
+from app.utils import pretty_print
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, ExprVisitor
+from app.grammar.statements import Stmt, Print, Expression, StmtVisitor
 
-class Interpreter(ExprVisitor):
-	def interpret(self, expr: Expr) -> None:
-		value = self.evaluate(expr)
-		print(self._stringify(value))
+class Interpreter(ExprVisitor, StmtVisitor):
+	def interpret(self, statements: list[Stmt]) -> Any:
+		for statement in statements:
+			self.execute(statement)
+
+	# def interpret_expr(self, expr: Expr) -> None:
+	# 	value = self.evaluate(expr)
+	# 	print(self._stringify(value))
 
 	def evaluate(self, expr: Expr) -> Any:
 		return expr.accept(self)
 	
+	def execute(self, stmt: Stmt) -> Any:
+		stmt.accept(self)
+
 	@staticmethod
 	def _stringify(value: Any):
 		if value == None:
@@ -18,7 +26,8 @@ class Interpreter(ExprVisitor):
 		else:
 			return pretty_print(value)
 	
-	def _isTruthy(self, value: Any):
+	@staticmethod
+	def _isTruthy(value: Any):
 		if value is None:
 			return False
 		if value == 'nil':
@@ -40,6 +49,17 @@ class Interpreter(ExprVisitor):
 			return
 		else:
 			raise LoxRuntimeError(operator, "Operands must be numbers.")
+	
+	# ----- Handles statements (StmtVisitor) -----
+
+	def visit_expression_stmt(self, stmt: Expression) -> None:
+		self.evaluate(stmt.expression)
+	
+	def visit_print_stmt(self, stmt: Print) -> None:
+		value = self.evaluate(stmt.expression)
+		print(self._stringify(value))
+
+	# ----- Handles expressions (ExprVisitor) -----
 
 	def visit_literal(self, expr: Literal) -> Any:
 		return expr.value

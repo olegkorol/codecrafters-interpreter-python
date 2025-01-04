@@ -1,6 +1,5 @@
 from typing import Any
 
-
 def pretty_print(value: Any):
 	"""
 	Pretty-printer to satisfy:
