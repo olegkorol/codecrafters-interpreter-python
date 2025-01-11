@@ -1,7 +1,7 @@
 from typing import Any
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
+from app.grammar.expressions import Assign, Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
 from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var
 from app.environment import Environment
 
@@ -137,3 +137,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
 				return left == right
 			case _:
 				return None
+			
+	def visit_assign(self, expr: Assign) -> Any:
+		value = self.evaluate(expr.value)
+		self._environment.assign(expr.name, value)
+		return value

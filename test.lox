@@ -1,12 +1,4 @@
-var x = 10;
-var y = x;
-print y;
-
-var z = "hello";
-print z;
-
-var a = true;
-print !!a;
-
-var b = x + y;
-print b;
+var a;
+var b = 2;
+var a = b = 1;
+print a;

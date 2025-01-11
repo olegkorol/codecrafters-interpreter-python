@@ -63,6 +63,21 @@ class Binary(Expr):
 
     def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_binary(self)
+    
+@dataclass
+class Assign(Expr):
+    """
+    We want the syntax tree to reflect that an l-value* isn't evaluated like a normal expression.
+    That's why the Assign node has a Token for the left-hand side, not an Expr.
+
+    *All of the expressions that we've seen so far that produce values are r-values.
+     An l-value “evaluates” to a storage location that you can assign into.
+    """
+    name: Token
+    value: Expr
+
+    def accept(self, visitor: 'ExprVisitor') -> Any:
+        return visitor.visit_assign(self)
 
 class ExprVisitor(ABC):
     """
@@ -82,3 +97,6 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_variable(self, expr: 'Variable') -> Any: ...
+
+    @abstractmethod
+    def visit_assign(self, expr: 'Assign') -> Any: ...

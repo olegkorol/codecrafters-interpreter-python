@@ -1,6 +1,6 @@
 import sys
 from app.types import TokenType, Token
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign
 from app.grammar.statements import Stmt, Print, Expression, Var
 
 """
@@ -118,7 +118,24 @@ class Parser:
     # ----- Handles expressions -----
 
     def expression(self) -> Expr:
-        return self.equality()
+        return self.assignment()
+    
+    def assignment(self) -> Expr:
+        expr = self.equality()
+
+        while self._match(TokenType.EQUAL):
+            equals = self._previous()
+            value = self.assignment()
+
+            if isinstance(expr, Variable):
+                name: Token = expr.name
+                return Assign(name, value)
+            
+            # Right now, the only valid target is a simple variable expression, but we’ll add fields later.
+            else:
+                error(equals, "Invalid assignment target.")
+
+        return expr
 
     def equality(self) -> Expr:
         expr = self.comparison()

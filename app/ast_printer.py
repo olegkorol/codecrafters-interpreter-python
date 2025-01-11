@@ -1,5 +1,5 @@
 from typing import Any
-from app.grammar.expressions import ExprVisitor, Expr, Grouping, Binary, Unary, Literal, Variable
+from app.grammar.expressions import Assign, ExprVisitor, Expr, Grouping, Binary, Unary, Literal, Variable
 from app.utils import pretty_print
 
 class AstPrinter(ExprVisitor):
@@ -28,6 +28,9 @@ class AstPrinter(ExprVisitor):
     
     def visit_variable(self, expr: Variable) -> Any:
         return self._parenthesize(expr.name.lexeme)
+    
+    def visit_assign(self, expr: Assign) -> Any:
+        return self._parenthesize(expr.name.lexeme, expr.value)
 
     def _parenthesize(self, name: str, *exprs: Expr) -> str:
         parts = [name]
