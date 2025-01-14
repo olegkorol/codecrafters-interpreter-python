@@ -49,6 +49,7 @@ def main():
             try:
                 tokens = Scanner(file_contents, print_to_stdout=False).tokenize()
                 statements: list[Stmt] = Parser(tokens).parse()
+                # print(statements)
                 Interpreter().interpret(statements)
             except LoxRuntimeError as error:
                 print(f"{error.message}\n[line {error.token.line}]", file=sys.stderr)

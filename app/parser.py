@@ -1,7 +1,7 @@
 import sys
 from app.types import TokenType, Token
 from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign
-from app.grammar.statements import Stmt, Print, Expression, Var
+from app.grammar.statements import Stmt, Print, Expression, Var, Block
 
 """
 (6.2) Recursive Descent Parsing
@@ -101,6 +101,8 @@ class Parser:
     def statement(self) -> Stmt:
         if self._match(TokenType.PRINT):
             return self.print_stmt()
+        if self._match(TokenType.LEFT_BRACE):
+            return Block(self.block())
         return self.expression_stmt()
 
     def print_stmt(self) -> Stmt:
@@ -109,9 +111,19 @@ class Parser:
         self._match(TokenType.SEMICOLON)
         return Print(value) # Stmt.Print
     
+    def block(self) -> list[Stmt]:
+        statements: list[Stmt] = []
+
+        while not self._check(TokenType.RIGHT_BRACE) and not self._isAtEnd():
+            statements.append(self.declaration())
+
+        self._consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
+
+        return statements
+    
     def expression_stmt(self) -> Stmt:
         expr: Expr = self.expression()
-        # self._consume(TokenType.SEMICOLON, "Expect ';' after value.") # TODO: try to re-add this
+        self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
         self._match(TokenType.SEMICOLON)
         return Expression(expr) # Stmt.Expression
 

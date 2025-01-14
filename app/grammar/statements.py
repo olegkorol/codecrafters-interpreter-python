@@ -7,23 +7,19 @@ from app.grammar.expressions import Expr
 """
 (8.1) Statements
 (8.2) Variable syntax [adds declarations]
-
-program        → statement* EOF ;
-statement      → exprStmt
-               | printStmt ;
-exprStmt       → expression ";" ;
-printStmt      → "print" expression ";" ;
-
-Result:
+(8.5.2) Block syntax semantics [adds blocks]
 
 program        → declaration* EOF ;
 declaration    → varDecl
                | statement ;
 statement      → exprStmt
-               | printStmt ;
+               | printStmt
+               | block ;
+
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
 printStmt      → "print" expression ";" ;
+block          → "{" declaration* "}" ;
 """
 
 @dataclass
@@ -54,6 +50,13 @@ class Print(Stmt):
     def accept(self, visitor: 'StmtVisitor') -> Any:
         return visitor.visit_print_stmt(self)
     
+@dataclass
+class Block(Stmt):
+    statements: list[Stmt]
+    
+    def accept(self, visitor: 'StmtVisitor') -> Any:
+        return visitor.visit_block_stmt(self)
+
 class StmtVisitor(ABC):
     """
     Interface for the visitor pattern for statements.
@@ -66,3 +69,6 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_var_stmt(self, stmt: Stmt) -> Any: ...
+
+    @abstractmethod
+    def visit_block_stmt(self, stmt: Stmt) -> Any: ...

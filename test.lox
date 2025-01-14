@@ -1,4 +1,15 @@
-var a;
-var b = 2;
-var a = b = 1;
+var a = "global_1";
+print a;
+{
+  var a = "block_1";
+  print a;
+}
+{
+  a = "global_1_modified";
+  print a;
+  var a = "block_2";
+  print a;
+  a = "block_2_modified";
+  print a;
+}
 print a;

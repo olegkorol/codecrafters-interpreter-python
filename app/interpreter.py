@@ -2,7 +2,7 @@ from typing import Any
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
 from app.grammar.expressions import Assign, Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
-from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var
+from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block
 from app.environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -21,6 +21,17 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	
 	def execute(self, stmt: Stmt) -> Any:
 		stmt.accept(self)
+
+	def execute_block(self, statements: list[Stmt], environment: Environment) -> Any:
+		previous: Environment = self._environment
+
+		try:
+			self._environment = environment
+			for statement in statements:
+				self.execute(statement)
+		finally:
+			self._environment = previous
+			return
 
 	@staticmethod
 	def _stringify(value: Any):
@@ -68,6 +79,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	def visit_print_stmt(self, stmt: Print) -> None:
 		value = self.evaluate(stmt.expression)
 		print(self._stringify(value))
+
+	def visit_block_stmt(self, stmt: Block) -> None:
+		new_environment = Environment(self._environment)
+		self.execute_block(stmt.statements, new_environment)
 
 	# ----- Handles expressions (ExprVisitor) -----
 
