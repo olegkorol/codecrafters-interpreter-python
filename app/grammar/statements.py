@@ -13,11 +13,14 @@ program        → declaration* EOF ;
 declaration    → varDecl
                | statement ;
 statement      → exprStmt
+               | ifStmt
                | printStmt
                | block ;
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
+ifStmt         → "if" "(" expression ")" statement
+               ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
 block          → "{" declaration* "}" ;
 """
@@ -56,6 +59,15 @@ class Block(Stmt):
     
     def accept(self, visitor: 'StmtVisitor') -> Any:
         return visitor.visit_block_stmt(self)
+    
+@dataclass
+class If(Stmt):
+    condition: Expr
+    thenBranch: Stmt
+    elseBranch: 'Stmt | None'
+
+    def accept(self, visitor: 'StmtVisitor') -> Any:
+        return visitor.visit_if_stmt(self)
 
 class StmtVisitor(ABC):
     """
@@ -72,3 +84,6 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_block_stmt(self, stmt: Stmt) -> Any: ...
+
+    @abstractmethod
+    def visit_if_stmt(self, stmt: Stmt) -> Any: ...

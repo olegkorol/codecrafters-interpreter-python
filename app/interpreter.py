@@ -2,7 +2,7 @@ from typing import Any
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
 from app.grammar.expressions import Assign, Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
-from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block
+from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block, If
 from app.environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
@@ -83,6 +83,14 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	def visit_block_stmt(self, stmt: Block) -> None:
 		new_environment = Environment(self._environment)
 		self.execute_block(stmt.statements, new_environment)
+
+	def visit_if_stmt(self, stmt: If) -> Any:
+		if self._isTruthy(self.evaluate(stmt.condition)):
+			self.execute(stmt.thenBranch)
+		elif stmt.elseBranch is not None:
+			self.execute(stmt.elseBranch)
+		else:
+			return None
 
 	# ----- Handles expressions (ExprVisitor) -----
 

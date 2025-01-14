@@ -1,15 +1,15 @@
-var a = "global_1";
-print a;
-{
-  var a = "block_1";
-  print a;
+var age = 14;
+
+if (age > 18) {
+  if (age > 50) {
+    print "senior";
+  } else {
+    print "adult";
+  }
+} else {
+  if (age > 12) {
+    print "teenager";
+  } else {
+    print "child";
+  }
 }
-{
-  a = "global_1_modified";
-  print a;
-  var a = "block_2";
-  print a;
-  a = "block_2_modified";
-  print a;
-}
-print a;

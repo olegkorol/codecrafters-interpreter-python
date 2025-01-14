@@ -1,7 +1,7 @@
 import sys
 from app.types import TokenType, Token
 from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign
-from app.grammar.statements import Stmt, Print, Expression, Var, Block
+from app.grammar.statements import Stmt, Print, Expression, Var, Block, If
 
 """
 (6.2) Recursive Descent Parsing
@@ -99,11 +99,25 @@ class Parser:
         return Var(name, initializer) # Stmt.Print
 
     def statement(self) -> Stmt:
+        if self._match(TokenType.IF):
+            return self.if_stmt()
         if self._match(TokenType.PRINT):
             return self.print_stmt()
         if self._match(TokenType.LEFT_BRACE):
             return Block(self.block())
         return self.expression_stmt()
+    
+    def if_stmt(self) -> Stmt:
+        self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = self.expression()
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.")
+        thenBranch = self.statement()
+
+        elseBranch = None
+        if self._match(TokenType.ELSE):
+            elseBranch = self.statement()
+        
+        return If(condition, thenBranch, elseBranch)
 
     def print_stmt(self) -> Stmt:
         value: Expr = self.expression()
