@@ -1,1 +1,5 @@
-false or "hello";
+var quz = 0;
+while (quz < 3) {
+  print quz;
+  quz = quz + 1;
+}

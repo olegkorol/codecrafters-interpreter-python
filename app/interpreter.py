@@ -2,11 +2,12 @@ from typing import Any
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
 from app.grammar.expressions import Assign, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
-from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block, If
+from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block, If, While
 from app.environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
-	_environment = Environment()
+	def __init__(self):
+		self._environment = Environment()
 
 	def interpret(self, statements: list[Stmt]) -> Any:
 		for statement in statements:
@@ -91,6 +92,11 @@ class Interpreter(ExprVisitor, StmtVisitor):
 			self.execute(stmt.elseBranch)
 		else:
 			return None
+
+	def visit_while_stmt(self, stmt: While) -> Any:
+		while self._isTruthy(self.evaluate(stmt.condition)):
+			self.execute(stmt.body)
+		return None
 
 	# ----- Handles expressions (ExprVisitor) -----
 
