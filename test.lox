@@ -1,7 +1,1 @@
-var x = 11;
-
-if (x and x > 0 and x < 10) {
-  print "between 0 and 10";
-} else {
-  print "*not* between 0 and 10";
-}
+false or "hello";
