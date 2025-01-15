@@ -1,15 +1,7 @@
-var age = 14;
+var x = 11;
 
-if (age > 18) {
-  if (age > 50) {
-    print "senior";
-  } else {
-    print "adult";
-  }
+if (x and x > 0 and x < 10) {
+  print "between 0 and 10";
 } else {
-  if (age > 12) {
-    print "teenager";
-  } else {
-    print "child";
-  }
+  print "*not* between 0 and 10";
 }

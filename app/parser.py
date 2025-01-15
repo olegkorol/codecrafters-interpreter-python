@@ -1,13 +1,18 @@
 import sys
 from app.types import TokenType, Token
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign, Logical
 from app.grammar.statements import Stmt, Print, Expression, Var, Block, If
 
 """
 (6.2) Recursive Descent Parsing
-(8.2.) Global variables [adds IDENTIFIER to `primary`]
+(8.2) Global variables [adds IDENTIFIER to `primary`]
+(9.3) Logical Operators [adds logic_or and logic_and]
 
 expression     → equality ;
+assignment     → IDENTIFIER "=" assignment
+               | logic_or ;
+logic_or       → logic_and ( "or" logic_and )* ;
+logic_and      → equality ( "and" equality )* ;
 equality       → comparison ( ( "!=" | "==" ) comparison )* ;
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term           → factor ( ( "-" | "+" ) factor )* ;
@@ -147,7 +152,7 @@ class Parser:
         return self.assignment()
     
     def assignment(self) -> Expr:
-        expr = self.equality()
+        expr = self.logic_or()
 
         while self._match(TokenType.EQUAL):
             equals = self._previous()
@@ -161,6 +166,26 @@ class Parser:
             else:
                 error(equals, "Invalid assignment target.")
 
+        return expr
+    
+    def logic_or(self) -> Expr:
+        expr = self.logic_and()
+        
+        while self._match(TokenType.OR):
+            operator: Token = self._previous()
+            right: Expr = self.logic_and()
+            expr: Expr = Logical(expr, operator, right)
+        
+        return expr
+    
+    def logic_and(self) -> Expr:
+        expr = self.equality()
+        
+        while self._match(TokenType.AND):
+            operator: Token = self._previous()
+            right: Expr = self.equality()
+            expr: Expr = Logical(expr, operator, right)
+        
         return expr
 
     def equality(self) -> Expr:

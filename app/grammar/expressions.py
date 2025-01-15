@@ -8,6 +8,7 @@ from app.types import Token
 (5.1.3) A Grammar for Lox expressions
 
 expression     → literal
+               | logical
                | unary
                | binary
                | grouping ;
@@ -32,6 +33,15 @@ class Literal(Expr):
 
     def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_literal(self)
+
+@dataclass
+class Logical(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def accept(self, visitor: 'ExprVisitor') -> Any:
+        return visitor.visit_logical(self)
 
 @dataclass 
 class Grouping(Expr):
@@ -100,3 +110,6 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_assign(self, expr: 'Assign') -> Any: ...
+
+    @abstractmethod
+    def visit_logical(self, expr: 'Logical') -> Any: ...

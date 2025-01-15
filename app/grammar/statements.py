@@ -8,6 +8,7 @@ from app.grammar.expressions import Expr
 (8.1) Statements
 (8.2) Variable syntax [adds declarations]
 (8.5.2) Block syntax semantics [adds blocks]
+(9.2) Conditional execution [adds if statements]
 
 program        → declaration* EOF ;
 declaration    → varDecl

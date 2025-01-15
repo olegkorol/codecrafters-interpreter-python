@@ -1,7 +1,7 @@
 from typing import Any
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
-from app.grammar.expressions import Assign, Expr, Grouping, Binary, Unary, Literal, ExprVisitor, Variable
+from app.grammar.expressions import Assign, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
 from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block, If
 from app.environment import Environment
 
@@ -96,6 +96,19 @@ class Interpreter(ExprVisitor, StmtVisitor):
 
 	def visit_literal(self, expr: Literal) -> Any:
 		return expr.value
+	
+	def visit_logical(self, expr: Logical) -> Any:
+		left: Expr = self.evaluate(expr.left)
+
+		match expr.operator.type:
+			case TokenType.OR:
+				if self._isTruthy(left):
+					return left
+			case TokenType.AND:
+				if not self._isTruthy(left):
+					return left
+		
+		return self.evaluate(expr.right)
 
 	def visit_grouping(self, expr: Grouping) -> Any:
 		return self.evaluate(expr.expression)
