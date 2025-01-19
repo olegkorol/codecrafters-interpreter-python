@@ -104,6 +104,8 @@ class Parser:
         return Var(name, initializer) # Stmt.Print
 
     def statement(self) -> Stmt:
+        if self._match(TokenType.FOR):
+            return self.for_stmt()
         if self._match(TokenType.IF):
             return self.if_stmt()
         if self._match(TokenType.PRINT):
@@ -114,6 +116,42 @@ class Parser:
             return Block(self.block())
         return self.expression_stmt()
     
+    def for_stmt(self) -> Stmt:
+        self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+
+        initializer: Stmt | None = None
+        if self._match(TokenType.SEMICOLON):
+            initializer = None
+        elif self._match(TokenType.VAR):
+            initializer = self.variable_declaration()
+        else:
+            initializer = self.expression_stmt()
+
+        condition: Expr | None = None
+        if not self._check(TokenType.SEMICOLON):
+            condition = self.expression()
+        self._consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+
+        increment: Expr | None = None
+        if not self._check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
+
+        body: Stmt | list[Stmt] = self.statement()
+
+        if increment is not None:
+            body = Block([body, Expression(increment)])
+
+        if condition is None:
+            condition = Literal(True)
+
+        body = While(condition, body)
+
+        if initializer is not None:
+            body = Block([initializer, body])
+
+        return body
+
     def if_stmt(self) -> Stmt:
         self._consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
         condition = self.expression()

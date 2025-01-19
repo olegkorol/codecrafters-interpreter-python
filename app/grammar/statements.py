@@ -10,11 +10,13 @@ from app.grammar.expressions import Expr
 (8.5.2) Block syntax semantics [adds blocks]
 (9.2) Conditional execution [adds if statements]
 (9.4) While Loops [adds while statements]
+(9.5) For Loops [adds for statements]
 
 program        → declaration* EOF ;
 declaration    → varDecl
                | statement ;
 statement      → exprStmt
+               | forStmt
                | ifStmt
                | printStmt
                | whileStmt
@@ -22,6 +24,9 @@ statement      → exprStmt
 
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 exprStmt       → expression ";" ;
+forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+               expression? ";"
+               expression? ")" statement ;
 ifStmt         → "if" "(" expression ")" statement
                ( "else" statement )? ;
 printStmt      → "print" expression ";" ;
