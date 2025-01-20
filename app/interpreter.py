@@ -1,13 +1,19 @@
 from typing import Any
+import time
+from abc import ABC, abstractmethod
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
-from app.grammar.expressions import Assign, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
+from app.grammar.expressions import Assign, Call, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
 from app.grammar.statements import Stmt, Print, Expression, StmtVisitor, Var, Block, If, While
 from app.environment import Environment
 
 class Interpreter(ExprVisitor, StmtVisitor):
 	def __init__(self):
-		self._environment = Environment()
+		self._globals: Environment = Environment()
+		self._environment: Environment = self._globals
+
+		# We define native functions here
+		self._globals.define("clock", ClockCallable)
 
 	def interpret(self, statements: list[Stmt]) -> Any:
 		for statement in statements:
@@ -133,6 +139,23 @@ class Interpreter(ExprVisitor, StmtVisitor):
 				return not self._isTruthy(right)
 			case _:
 				return "nil"
+			
+	def visit_call(self, expr: Call) -> Any:
+		callee = self.evaluate(expr.callee)
+		arguments = [self.evaluate(argument) for argument in expr.arguments]
+
+		if not isinstance(callee(), LoxCallable):
+			raise RuntimeError(expr.paren, "Can only call functions and classes.")
+		
+		function: LoxCallable = callee
+
+		if len(arguments) != function.arity():
+			raise RuntimeError(
+				expr.paren,
+				f"Expected {function.arity()} arguments but got {len(arguments)}."
+				)
+
+		return function.call(self, arguments)
 	
 	def visit_variable(self, expr: Variable) -> Any:
 		return self._environment.get(expr.name)
@@ -184,3 +207,24 @@ class Interpreter(ExprVisitor, StmtVisitor):
 		value = self.evaluate(expr.value)
 		self._environment.assign(expr.name, value)
 		return value
+
+class LoxCallable(ABC):
+	@abstractmethod
+	def call(self, interpreter: Interpreter, arguments: list) -> Any: ...
+	# Arity is the fancy term for the number of arguments a function or operation expects
+	@abstractmethod
+	def arity(self) -> int: ...
+
+
+class ClockCallable(LoxCallable):
+	@staticmethod
+	def arity() -> int:
+		return 0
+	
+	@staticmethod
+	def call(interpreter: Interpreter, arguments: list) -> int:
+		return int(time.time())
+	
+	@staticmethod
+	def __str__() -> str:
+		return "<native fn>"

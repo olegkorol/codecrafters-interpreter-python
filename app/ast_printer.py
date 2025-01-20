@@ -1,5 +1,5 @@
 from typing import Any
-from app.grammar.expressions import Assign, ExprVisitor, Expr, Grouping, Binary, Logical, Unary, Literal, Variable
+from app.grammar.expressions import Assign, Call, ExprVisitor, Expr, Grouping, Binary, Logical, Unary, Literal, Variable
 from app.utils import pretty_print
 
 class AstPrinter(ExprVisitor):
@@ -25,6 +25,9 @@ class AstPrinter(ExprVisitor):
     
     def visit_logical(self, expr: Logical) -> Any:
         return self._parenthesize(expr.operator.lexeme, expr.left, expr.right)
+
+    def visit_call(self, expr: Call) -> Any:
+        return self._parenthesize('call', expr.callee)
 
     def visit_unary(self, expr: Unary) -> str:
         return self._parenthesize(expr.operator.lexeme, expr.right)

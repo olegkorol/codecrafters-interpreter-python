@@ -4,23 +4,6 @@ from typing import Any
 from app.utils import pretty_print
 from app.types import Token
 
-"""
-(5.1.3) A Grammar for Lox expressions
-
-expression     → literal
-               | logical
-               | unary
-               | binary
-               | grouping ;
-
-literal        → NUMBER | STRING | "true" | "false" | "nil" ;
-grouping       → "(" expression ")" ;
-unary          → ( "-" | "!" ) expression ;
-binary         → expression operator expression ;
-operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
-               | "+"  | "-"  | "*" | "/" ;
-"""
-
 @dataclass
 class Expr(ABC):
     """Base class for all expressions"""
@@ -51,13 +34,22 @@ class Grouping(Expr):
         return visitor.visit_grouping(self)
 
 @dataclass
+class Call(Expr):
+    callee: Expr
+    paren: Token
+    arguments: list[Expr]
+
+    def accept(self, visitor: 'ExprVisitor') -> Any:
+        return visitor.visit_call(self)
+
+@dataclass
 class Unary(Expr):
     operator: Token
     right: Expr
 
     def accept(self, visitor: 'ExprVisitor') -> Any:
         return visitor.visit_unary(self)
-    
+
 @dataclass
 class Variable(Expr):
     name: Token
@@ -113,3 +105,6 @@ class ExprVisitor(ABC):
 
     @abstractmethod
     def visit_logical(self, expr: 'Logical') -> Any: ...
+
+    @abstractmethod
+    def visit_call(self, expr: 'Call') -> Any: ...

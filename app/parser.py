@@ -1,27 +1,7 @@
 import sys
 from app.types import TokenType, Token
-from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign, Logical
+from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign, Logical, Call
 from app.grammar.statements import Stmt, Print, Expression, Var, Block, If, While
-
-"""
-(6.2) Recursive Descent Parsing
-(8.2) Global variables [adds IDENTIFIER to `primary`]
-(9.3) Logical Operators [adds logic_or and logic_and]
-
-expression     → equality ;
-assignment     → IDENTIFIER "=" assignment
-               | logic_or ;
-logic_or       → logic_and ( "or" logic_and )* ;
-logic_and      → equality ( "and" equality )* ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term           → factor ( ( "-" | "+" ) factor )* ;
-factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-               | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" | IDENTIFIER ;
-"""
 
 class Parser:
     current: int = 0
@@ -85,6 +65,19 @@ class Parser:
     def _previous(self) -> Token:
         return self.tokens[self.current - 1]
     
+    def _finish_call(self, callee: Expr) -> Expr:
+        arguments: list[Expr] = []
+
+        if not self._check(TokenType.RIGHT_PAREN):
+            while self._match(TokenType.COMMA):
+                if len(arguments) >= 255:
+                    error(self._peek(), "Can't have more than 255 arguments.")
+                arguments.append(self.expression())
+
+        paren: Token = self._consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
+
+        return Call(callee, paren, arguments)
+
     # ----- Handles declarations and statements -----
 
     def declaration(self) -> Stmt:
@@ -281,7 +274,18 @@ class Parser:
             right = self.unary()
             return Unary(operator, right)
 
-        return self.primary()
+        return self.call()
+    
+    def call(self) -> Expr:
+        expr: Expr = self.primary()
+
+        while True: # this will make sense when we expand the parser to handle properties on objects
+            if self._match(TokenType.LEFT_PAREN):
+                expr = self._finish_call(expr)
+            else:
+                break
+
+        return expr
     
     def primary(self) -> Expr:
         if self._match(TokenType.FALSE):

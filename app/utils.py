@@ -9,12 +9,17 @@ def pretty_print(value: Any):
 	  (For example, 10.40 should be printed as 10.4).
 	"""
 	match value:
-		case float():
-			return f"{value:g}"
 		case None:
 			return "nil"
 		case bool():
 			return str(value).lower()
+		case int():
+			# Use repr to get full precision
+			return repr(value)
+		case float():
+			# Remove .0 for whole numbers, preserve precision for others
+			float_str = repr(value)
+			return float_str.rstrip('0').rstrip('.') if float_str.endswith('.0') else float_str
 		case _:
 			return value
 		
