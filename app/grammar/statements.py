@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 from app.types import Token
 from app.grammar.expressions import Expr
-from app.exceptions import ReturnException
 
 @dataclass
 class Stmt(ABC):

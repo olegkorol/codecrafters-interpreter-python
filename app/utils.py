@@ -31,3 +31,7 @@ class LoxRuntimeError(RuntimeError):
 		super().__init__(message)
 		self.message = message
 		self.token = token
+
+class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value

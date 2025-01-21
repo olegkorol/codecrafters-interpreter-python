@@ -2,11 +2,10 @@ import time
 from typing import Any
 from abc import ABC, abstractmethod
 from app.types import TokenType, Token
-from app.utils import pretty_print, LoxRuntimeError
+from app.utils import pretty_print, LoxRuntimeError, ReturnException
 from app.grammar.expressions import Assign, Call, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
 from app.grammar.statements import Function, Return, Stmt, Print, Expression, StmtVisitor, Var, Block, If, While
 from app.environment import Environment
-from app.exceptions import ReturnException
 
 class Interpreter(ExprVisitor, StmtVisitor):
 	def __init__(self):
@@ -156,12 +155,12 @@ class Interpreter(ExprVisitor, StmtVisitor):
 		arguments = [self.evaluate(argument) for argument in expr.arguments]
 
 		if not isinstance(callee, LoxCallable):
-			raise RuntimeError(expr.paren, "Can only call functions and classes.")
+			raise LoxRuntimeError(expr.paren, "Can only call functions and classes.")
 		
 		function: LoxCallable = callee
 
 		if len(arguments) != function.arity():
-			raise RuntimeError(
+			raise LoxRuntimeError(
 				expr.paren,
 				f"Expected {function.arity()} arguments but got {len(arguments)}."
 				)
