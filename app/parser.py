@@ -1,7 +1,7 @@
 import sys
 from app.types import TokenType, Token
 from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign, Logical, Call
-from app.grammar.statements import Stmt, Print, Expression, Var, Block, If, While
+from app.grammar.statements import Stmt, Print, Expression, Var, Block, If, While, Function
 
 class Parser:
     current: int = 0
@@ -69,10 +69,14 @@ class Parser:
         arguments: list[Expr] = []
 
         if not self._check(TokenType.RIGHT_PAREN):
-            while self._match(TokenType.COMMA):
+            while True:
                 if len(arguments) >= 255:
                     error(self._peek(), "Can't have more than 255 arguments.")
+
                 arguments.append(self.expression())
+
+                if not self._match(TokenType.COMMA):
+                    break
 
         paren: Token = self._consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
 
@@ -81,10 +85,35 @@ class Parser:
     # ----- Handles declarations and statements -----
 
     def declaration(self) -> Stmt:
+        if self._match(TokenType.FUN):
+            return self.function("function")
         if self._match(TokenType.VAR):
             return self.variable_declaration()
         return self.statement()
         # TODO: add `synchronize()` in an `except` clause for error handling
+
+    def function(self, kind: str) -> Stmt:
+        name: Token = self._consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
+        self._consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
+
+        parameters: list[Token] = []
+        if not self._check(TokenType.RIGHT_PAREN):
+            while True:
+                if len(parameters) >= 255:
+                    error(self._peek(), "Can't have more than 255 parameters.")
+                
+                parameters.append(self._consume(TokenType.IDENTIFIER, "Expect parameter name."))
+
+                if not self._match(TokenType.COMMA):
+                    break
+
+        self._consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters")
+
+        self._consume(TokenType.LEFT_BRACE, f"Expect '{{' before {kind} body.")
+        body: list[Stmt] = self.block()
+
+        return Function(name, parameters, body)
+            
     
     def variable_declaration(self) -> Stmt:
         name: Token = self._consume(TokenType.IDENTIFIER, "Expect variable name.")

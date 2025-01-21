@@ -4,36 +4,6 @@ from typing import Any
 from app.types import Token
 from app.grammar.expressions import Expr
 
-"""
-(8.1) Statements
-(8.2) Variable syntax [adds declarations]
-(8.5.2) Block syntax semantics [adds blocks]
-(9.2) Conditional execution [adds if statements]
-(9.4) While Loops [adds while statements]
-(9.5) For Loops [adds for statements]
-
-program        → declaration* EOF ;
-declaration    → varDecl
-               | statement ;
-statement      → exprStmt
-               | forStmt
-               | ifStmt
-               | printStmt
-               | whileStmt
-               | block ;
-
-varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
-exprStmt       → expression ";" ;
-forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
-               expression? ";"
-               expression? ")" statement ;
-ifStmt         → "if" "(" expression ")" statement
-               ( "else" statement )? ;
-printStmt      → "print" expression ";" ;
-whileStmt      → "while" "(" expression ")" statement ;
-block          → "{" declaration* "}" ;
-"""
-
 @dataclass
 class Stmt(ABC):
     """Base class for all statements"""
@@ -85,6 +55,15 @@ class If(Stmt):
 
     def accept(self, visitor: 'StmtVisitor') -> Any:
         return visitor.visit_if_stmt(self)
+    
+@dataclass
+class Function(Stmt):
+    name: Token
+    params: list[Token]
+    body: list[Stmt]
+    
+    def accept(self, visitor: 'StmtVisitor') -> Any:
+        return visitor.visit_function_stmt(self)
 
 class StmtVisitor(ABC):
     """
@@ -107,3 +86,6 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_while_stmt(self, stmt: 'While') -> Any: ...
+
+    @abstractmethod
+    def visit_function_stmt(self, stmt: 'Function') -> Any: ...
