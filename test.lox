@@ -1,1 +1,15 @@
-85();
+var count = 3;
+
+fun tick() {
+  if (count > 0) {
+    print count;
+    count = count - 1;
+    return false;
+  }
+  print "Blast off!";
+  return true;
+}
+
+while (!tick()) {
+  print "Not yet...";
+}
