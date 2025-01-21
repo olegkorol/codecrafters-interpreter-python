@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 from app.types import Token
 from app.grammar.expressions import Expr
+from app.exceptions import ReturnException
 
 @dataclass
 class Stmt(ABC):
@@ -65,6 +66,18 @@ class Function(Stmt):
     def accept(self, visitor: 'StmtVisitor') -> Any:
         return visitor.visit_function_stmt(self)
 
+@dataclass
+class Return(Stmt, Exception):
+    keyword: Token
+    value: Expr | None
+
+    def accept(self, visitor: 'StmtVisitor') -> Any:
+        # try:
+        return visitor.visit_return_stmt(self)
+        # except ReturnException as return_value:
+        #     print(f"Catching return exception... value: {return_value.value}")
+        #     return return_value.value
+
 class StmtVisitor(ABC):
     """
     Interface for the visitor pattern for statements.
@@ -89,3 +102,6 @@ class StmtVisitor(ABC):
 
     @abstractmethod
     def visit_function_stmt(self, stmt: 'Function') -> Any: ...
+
+    @abstractmethod
+    def visit_return_stmt(self, stmt: 'Return') -> Any: ...

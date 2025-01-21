@@ -1,7 +1,7 @@
 import sys
 from app.types import TokenType, Token
 from app.grammar.expressions import Expr, Grouping, Binary, Unary, Literal, Variable, Assign, Logical, Call
-from app.grammar.statements import Stmt, Print, Expression, Var, Block, If, While, Function
+from app.grammar.statements import Stmt, Print, Expression, Var, Block, If, While, Function, Return
 
 class Parser:
     current: int = 0
@@ -132,6 +132,8 @@ class Parser:
             return self.if_stmt()
         if self._match(TokenType.PRINT):
             return self.print_stmt()
+        if self._match(TokenType.RETURN):
+            return self.return_stmt()
         if self._match(TokenType.WHILE):
             return self.while_stmt()
         if self._match(TokenType.LEFT_BRACE):
@@ -191,6 +193,16 @@ class Parser:
         self._consume(TokenType.SEMICOLON, "Expect ';' after value.")
         self._match(TokenType.SEMICOLON)
         return Print(value) # Stmt.Print
+    
+    def return_stmt(self) -> Stmt:
+        keyword = self._previous()
+        value: Expr | None = None
+        if not self._check(TokenType.SEMICOLON):
+            value = self.expression()
+        
+        self._consume(TokenType.SEMICOLON, "Expect ';' after return value.")
+
+        return Return(keyword, value)
     
     def while_stmt(self) -> Stmt:
         self._consume(TokenType.LEFT_PAREN,"Expect '(' after 'while'." )

@@ -4,8 +4,9 @@ from abc import ABC, abstractmethod
 from app.types import TokenType, Token
 from app.utils import pretty_print, LoxRuntimeError
 from app.grammar.expressions import Assign, Call, Expr, Grouping, Binary, Logical, Unary, Literal, ExprVisitor, Variable
-from app.grammar.statements import Function, Stmt, Print, Expression, StmtVisitor, Var, Block, If, While
+from app.grammar.statements import Function, Return, Stmt, Print, Expression, StmtVisitor, Var, Block, If, While
 from app.environment import Environment
+from app.exceptions import ReturnException
 
 class Interpreter(ExprVisitor, StmtVisitor):
 	def __init__(self):
@@ -38,7 +39,8 @@ class Interpreter(ExprVisitor, StmtVisitor):
 				self.execute(statement)
 		finally:
 			self._environment = previous
-			return
+			# if we add a "return" here, exceptions will not be further propagated;
+			# a "return" in "finally" overrides all previous return's and raise's.
 
 	@staticmethod
 	def _stringify(value: Any):
@@ -91,6 +93,10 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	def visit_print_stmt(self, stmt: Print) -> None:
 		value = self.evaluate(stmt.expression)
 		print(self._stringify(value))
+
+	def visit_return_stmt(self, stmt: Return) -> Any:
+		value = self.evaluate(stmt.value) if stmt.value is not None else None
+		raise ReturnException(value)
 
 	def visit_block_stmt(self, stmt: Block) -> None:
 		new_environment = Environment(self._environment)
@@ -233,22 +239,25 @@ class LoxFunction(LoxCallable):
 	def __init__(self, declaration: Function):
 		self.declaration = declaration
 
-	def call(self, interpreter: Interpreter, arguments: list) -> None:
+	def call(self, interpreter: Interpreter, arguments: list) -> Any:
 		environment = Environment(interpreter._globals)
 
 		for i in range(len(self.declaration.params)):
 			param = self.declaration.params[i]
 			environment.define(param.lexeme, arguments[i])
 
-		interpreter.execute_block(self.declaration.body, environment)
-
+		try:
+			interpreter.execute_block(self.declaration.body, environment)
+		except ReturnException as return_value:
+			return return_value.value
+			
 		return None
 
 	def arity(self) -> int:
 		return len(self.declaration.params)
 
 	def __str__(self) -> str:
-		return f"<fn {self.declaration.name.lexeme} >"
+		return f"<fn {self.declaration.name.lexeme}>"
 
 # ------------ Native functions and methods ---------------
 
