@@ -76,7 +76,7 @@ class Interpreter(ExprVisitor, StmtVisitor):
 	# ----- Handles statements (StmtVisitor) -----
 
 	def visit_function_stmt(self, stmt: Function) -> Any:
-		function: LoxFunction = LoxFunction(stmt)
+		function: LoxFunction = LoxFunction(stmt, self._environment)
 		self._environment.define(stmt.name.lexeme, function)
 		return None
 
@@ -235,12 +235,14 @@ class LoxCallable(ABC):
 	
 class LoxFunction(LoxCallable):
 	declaration: Function
+	closure: Environment
 
-	def __init__(self, declaration: Function):
+	def __init__(self, declaration: Function, closure: Environment):
+		self.closure = closure
 		self.declaration = declaration
 
 	def call(self, interpreter: Interpreter, arguments: list) -> Any:
-		environment = Environment(interpreter._globals)
+		environment = Environment(self.closure)
 
 		for i in range(len(self.declaration.params)):
 			param = self.declaration.params[i]
